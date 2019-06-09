@@ -4,12 +4,10 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.9
 
     Copyright (c) 2019 Kei Takagi
 */
-// TODO
-// Cursor blink
 
 #include <font.h>
 #include <SSD1306ASCII_I2C.h>
@@ -33,6 +31,9 @@
 TwiMaster rtc(true);
 #endif
 
+// buzzer pin, 0 = disabled/not present
+#define BUZZER_PIN    0
+
 // OLED
 SSD1306ASCII oled;
 
@@ -46,8 +47,9 @@ char autorun = 0;
 void setup() {
   keybordSetup();
   oled.init();
-
+  
   reset();
+  host_init(BUZZER_PIN);
   host_cls();
   host_outputProgMemString(welcomeStr);
   // show memory size

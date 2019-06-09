@@ -120,11 +120,11 @@ const char* const errorTable[] PROGMEM = {
 #define TKN_ARG2_TYPE_STR	0x10
 #define TKN_ARG3_TYPE_STR	0x20
 
-#define TKN_ARG_MASK		0x38
-#define TKN_ARG_SHIFT		3
+#define TKN_ARG_MASK		  0x38
+#define TKN_ARG_SHIFT		  3
 // bits 7,8 formatting
-#define TKN_FMT_POST		0x40
-#define TKN_FMT_PRE		0x80
+#define TKN_FMT_POST	  	0x40
+#define TKN_FMT_PRE		    0x80
 
 
 const TokenTableEntry PROGMEM tokenTable[] = {

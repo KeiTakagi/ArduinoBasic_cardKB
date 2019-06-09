@@ -1,10 +1,9 @@
-# ArduinoBasic for cardKeyBoard　Beta版
-- Robin Edwardsさんの[”ArduinoBasic”](https://github.com/robinhedwards/ArduinoBASIC)を、M5stak用のCardKeyBoardとI2CのOLED(128x32)で、とりあえず動かしてみました。あまり検証していません。<br>
+# ArduinoBasic for cardKeyBoard Beta Version
+- Robin Edwardsさんの[”ArduinoBasic”](https://github.com/robinhedwards/ArduinoBASIC)を、M5stak用のCardKeyBoardとI2CのOLED(128x32)で動かしています。<br>
 
 ![image](./img/img001.jpg)
 
 ## ToDo
-- カーソルの表示
 - 三角関数
 
 ## コンパイルの際の注意事項
