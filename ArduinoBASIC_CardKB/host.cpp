@@ -298,7 +298,7 @@ bool host_ESCPressed() {
   while (inkeyChar = getChar()) {
     // read the next key
     //        inkeyChar = keyboard.read();
-    if (inkeyChar == 0x27)//ESC
+    if (inkeyChar == 0x1B)//ESC
       return true;
   }
   return false;
