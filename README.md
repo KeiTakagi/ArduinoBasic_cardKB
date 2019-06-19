@@ -13,3 +13,8 @@
 - バイナリは下図から作成できます<br>![image](./img/img003.PNG)<br>
 - avrdudeやavrdude-GUI等のツールを使ってコンパイルしたバイナリを書き込んでください。
 
+## ヒューズビット
+- HIGH = 0xC2
+- LOW = 0x07
+- EXTENDED = 0xD8
+- LOCKBIT = 0x3F
