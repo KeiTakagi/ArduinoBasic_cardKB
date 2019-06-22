@@ -1,43 +1,43 @@
 /* ---------------------------------------------------------------------------
- * Basic Interpreter
- * Robin Edwards 2014
- * ---------------------------------------------------------------------------
- * This BASIC is modelled on Sinclair BASIC for the ZX81 and ZX Spectrum. It
- * should be capable of running most of the examples in the manual for both
- * machines, with the exception of anything machine specific (i.e. graphics,
- * sound & system variables).
- *
- * Notes
- *  - All numbers (except line numbers) are floats internally
- *  - Multiple commands are allowed per line, seperated by :
- *  - LET is optional e.g. LET a = 6: b = 7
- *  - MOD provides the modulo operator which was missing from Sinclair BASIC.
- *     Both numbers are first rounded to ints e.g. 5 mod 2 = 1
- *  - CONT can be used to continue from a STOP. It does not continue from any
- *     other error condition.
- *  - Arrays can be any dimension. There is no single char limit to names.
- *  - Like Sinclair BASIC, DIM a(10) and LET a = 5 refer to different 'a's.
- *     One is a simple variable, the other is an array. There is no ambiguity
- *     since the one being referred to is always clear from the context.
- *  - String arrays differ from Sinclair BASIC. DIM a$(5,5) makes an array
- *     of 25 strings, which can be any length. e.g. LET a$(1,1)="long string"
- *  - functions like LEN, require brackets e.g. LEN(a$)
- *  - String manipulation functions are LEFT$, MID$, RIGHT$
- *  - RND is a nonary operator not a function i.e. RND not RND()
- *  - PRINT AT x,y ... is replaced by POSITION x,y : PRINT ...
- *  - LIST takes an optional start and end e.g. LIST 1,100 or LIST 50
- *  - INKEY$ reads the last key pressed from the keyboard, or an empty string
- *     if no key pressed. The (single key) buffer is emptied after the call.
- *     e.g. a$ = INKEY$
- *  - LOAD/SAVE load and save the current program to the EEPROM (1k limit).
- *     SAVE+ will set the auto-run flag, which loads the program automatically
- *     on boot. With a filename e.g. SAVE "test" saves to an external EEPROM.
- *  - DIR/DELETE "filename" - list and remove files from external EEPROM.
- *  - PINMODE <pin>, <mode> - sets the pin mode (0=input, 1=output, 2=pullup)
- *  - PIN <pin>, <state> - sets the pin high (non zero) or low (zero)
- *  - PINREAD(pin) returns pin value, ANALOGRD(pin) for analog pins
- * ---------------------------------------------------------------------------
- */
+   Basic Interpreter
+   Robin Edwards 2014
+   ---------------------------------------------------------------------------
+   This BASIC is modelled on Sinclair BASIC for the ZX81 and ZX Spectrum. It
+   should be capable of running most of the examples in the manual for both
+   machines, with the exception of anything machine specific (i.e. graphics,
+   sound & system variables).
+
+   Notes
+    - All numbers (except line numbers) are floats internally
+    - Multiple commands are allowed per line, seperated by :
+    - LET is optional e.g. LET a = 6: b = 7
+    - MOD provides the modulo operator which was missing from Sinclair BASIC.
+       Both numbers are first rounded to ints e.g. 5 mod 2 = 1
+    - CONT can be used to continue from a STOP. It does not continue from any
+       other error condition.
+    - Arrays can be any dimension. There is no single char limit to names.
+    - Like Sinclair BASIC, DIM a(10) and LET a = 5 refer to different 'a's.
+       One is a simple variable, the other is an array. There is no ambiguity
+       since the one being referred to is always clear from the context.
+    - String arrays differ from Sinclair BASIC. DIM a$(5,5) makes an array
+       of 25 strings, which can be any length. e.g. LET a$(1,1)="long string"
+    - functions like LEN, require brackets e.g. LEN(a$)
+    - String manipulation functions are LEFT$, MID$, RIGHT$
+    - RND is a nonary operator not a function i.e. RND not RND()
+    - PRINT AT x,y ... is replaced by POSITION x,y : PRINT ...
+    - LIST takes an optional start and end e.g. LIST 1,100 or LIST 50
+    - INKEY$ reads the last key pressed from the keyboard, or an empty string
+       if no key pressed. The (single key) buffer is emptied after the call.
+       e.g. a$ = INKEY$
+    - LOAD/SAVE load and save the current program to the EEPROM (1k limit).
+       SAVE+ will set the auto-run flag, which loads the program automatically
+       on boot. With a filename e.g. SAVE "test" saves to an external EEPROM.
+    - DIR/DELETE "filename" - list and remove files from external EEPROM.
+    - PINMODE <pin>, <mode> - sets the pin mode (0=input, 1=output, 2=pullup)
+    - PIN <pin>, <state> - sets the pin high (non zero) or low (zero)
+    - PINREAD(pin) returns pin value, ANALOGRD(pin) for analog pins
+   ---------------------------------------------------------------------------
+*/
 
 /*
     @file basic.cpp
@@ -45,7 +45,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.22
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -151,8 +151,8 @@ const TokenTableEntry PROGMEM tokenTable[] = {
 /* **************************************************************************
    PROGRAM FUNCTIONS
  * **************************************************************************/
-void printTokens(unsigned char *p) {
-  int modeREM = 0;
+void printTokens(uint8_t *p) {
+  boolean modeREM = false;
   while (*p != TOKEN_EOL) {
     if (*p == TOKEN_IDENT) {
       p++;
@@ -194,14 +194,14 @@ void printTokens(unsigned char *p) {
       if (fmt & TKN_FMT_POST)
         host_outputChar(' ');
       if (*p == TOKEN_REM)
-        modeREM = 1;
+        modeREM = true;
       p++;
     }
   }
 }
 
 void listProg(uint16_t first, uint16_t last) {
-  unsigned char *p = &mem[0];
+  uint8_t *p = &mem[0];
   while (p < &mem[sysPROGEND]) {
     uint16_t lineNum = *(uint16_t*)(p + 2);
     if ((!first || lineNum >= first) && (!last || lineNum <= last)) {
@@ -214,8 +214,8 @@ void listProg(uint16_t first, uint16_t last) {
   }
 }
 
-unsigned char *findProgLine(uint16_t targetLineNumber) {
-  unsigned char *p = &mem[0];
+uint8_t *findProgLine(uint16_t targetLineNumber) {
+  uint8_t *p = &mem[0];
   while (p < &mem[sysPROGEND]) {
     uint16_t lineNum = *(uint16_t*)(p + 2);
     if (lineNum >= targetLineNumber)
@@ -225,16 +225,16 @@ unsigned char *findProgLine(uint16_t targetLineNumber) {
   return p;
 }
 
-void deleteProgLine(unsigned char *p) {
+void deleteProgLine(uint8_t *p) {
   uint16_t lineLen = *(uint16_t*)p;
   sysPROGEND -= lineLen;
   memmove(p, p + lineLen, &mem[sysPROGEND] - p);
 }
 
-int doProgLine(uint16_t lineNumber, unsigned char* tokenPtr, int tokensLength)
+int doProgLine(uint16_t lineNumber, uint8_t* tokenPtr, int tokensLength)
 {
   // find line of the at or immediately after the number
-  unsigned char *p = findProgLine(lineNumber);
+  uint8_t *p = findProgLine(lineNumber);
   uint16_t foundLine = 0;
   if (p < &mem[sysPROGEND])
     foundLine = *(uint16_t*)(p + 2);
@@ -271,21 +271,21 @@ int doProgLine(uint16_t lineNumber, unsigned char* tokenPtr, int tokensLength)
 int stackPushNum(float val) {
   if (sysSTACKEND + sizeof(float) > sysVARSTART)
     return 0;	// out of memory
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   *(float *)p = val;
   sysSTACKEND += sizeof(float);
   return 1;
 }
 float stackPopNum() {
   sysSTACKEND -= sizeof(float);
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   return *(float *)p;
 }
 int stackPushStr(char *str) {
   int len = 1 + strlen(str);
   if (sysSTACKEND + len + 2 > sysVARSTART)
     return 0;	// out of memory
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   strcpy((char*)p, str);
   p += len;
   *(uint16_t *)p = len;
@@ -294,12 +294,12 @@ int stackPushStr(char *str) {
 }
 char *stackGetStr() {
   // returns string without popping it
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   int len = *(uint16_t *)(p - 2);
   return (char *)(p - len - 2);
 }
 char *stackPopStr() {
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   int len = *(uint16_t *)(p - 2);
   sysSTACKEND -= (len + 2);
   return (char *)&mem[sysSTACKEND];
@@ -307,7 +307,7 @@ char *stackPopStr() {
 
 void stackAdd2Strs() {
   // equivalent to popping 2 strings, concatenating them and pushing the result
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   int str2len = *(uint16_t *)(p - 2);
   sysSTACKEND -= (str2len + 2);
   char *str2 = (char*)&mem[sysSTACKEND];
@@ -328,7 +328,7 @@ void stackAdd2Strs() {
 // mode 0 = LEFT$, 1 = RIGHT$
 void stackLeftOrRightStr(int len, int mode) {
   // equivalent to popping the current string, doing the operation then pushing it again
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   int strlen = *(uint16_t *)(p - 2);
   len++; // include trailing null
   if (len > strlen) len = strlen;
@@ -351,7 +351,7 @@ void stackLeftOrRightStr(int len, int mode) {
 
 void stackMidStr(int start, int len) {
   // equivalent to popping the current string, doing the operation then pushing it again
-  unsigned char *p = &mem[sysSTACKEND];
+  uint8_t *p = &mem[sysSTACKEND];
   int strlen = *(uint16_t *)(p - 2);
   len++; // include trailing null
   if (start > strlen) start = strlen;
@@ -393,12 +393,12 @@ void stackMidStr(int start, int len) {
 #define VAR_TYPE_STRING		0x8
 #define VAR_TYPE_STR_ARRAY	0x10
 
-unsigned char *findVariable(char *searchName, int searchMask) {
-  unsigned char *p = &mem[sysVARSTART];
+uint8_t *findVariable(char *searchName, int searchMask) {
+  uint8_t *p = &mem[sysVARSTART];
   while (p < &mem[sysVAREND]) {
     int type = *(p + 2);
     if (type & searchMask) {
-      unsigned char *name = p + 3;
+      uint8_t *name = p + 3;
       if (strcasecmp((char*)name, searchName) == 0)
         return p;
     }
@@ -407,7 +407,7 @@ unsigned char *findVariable(char *searchName, int searchMask) {
   return NULL;
 }
 
-void deleteVariableAt(unsigned char *pos) {
+void deleteVariableAt(uint8_t *pos) {
   int len = *(uint16_t *)pos;
   if (pos == &mem[sysVARSTART]) {
     sysVARSTART += len;
@@ -422,7 +422,7 @@ void deleteVariableAt(unsigned char *pos) {
 int storeNumVariable(char *name, float val) {
   // these can be modified in place
   int nameLen = strlen(name);
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p != NULL)
   { // replace the old value
     // (could either be VAR_TYPE_NUM or VAR_TYPE_FORNEXT)
@@ -440,7 +440,7 @@ int storeNumVariable(char *name, float val) {
       return 0;	// out of memory
     sysVARSTART -= bytesNeeded;
 
-    unsigned char *p = &mem[sysVARSTART];
+    uint8_t *p = &mem[sysVARSTART];
     *(uint16_t *)p = bytesNeeded;
     p += 2;
     *p++ = VAR_TYPE_NUM;
@@ -460,7 +460,7 @@ int storeForNextVariable(char *name, float start, float step, float end, uint16_
 
   // unlike simple numeric variables, these are reallocated if they already exist
   // since the existing value might be a simple variable or a for/next variable
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p != NULL) {
     // check there will actually be room for the new value
     uint16_t oldVarLen = *(uint16_t*)p;
@@ -499,7 +499,7 @@ int storeStrVariable(char *name, char *val) {
   bytesNeeded += valLen + 1;	// val
 
   // strings and arrays are re-allocated if they already exist
-  unsigned char *p = findVariable(name, VAR_TYPE_STRING);
+  uint8_t *p = findVariable(name, VAR_TYPE_STRING);
   if (p != NULL) {
     // check there will actually be room for the new value
     uint16_t oldVarLen = *(uint16_t*)p;
@@ -539,7 +539,7 @@ int createArray(char *name, int isString) {
   }
   bytesNeeded += 2 * numDims + (isString ? 1 : sizeof(float)) * numElements;
   // strings and arrays are re-allocated if they already exist
-  unsigned char *p = findVariable(name, (isString ? VAR_TYPE_STR_ARRAY : VAR_TYPE_NUM_ARRAY));
+  uint8_t *p = findVariable(name, (isString ? VAR_TYPE_STR_ARRAY : VAR_TYPE_NUM_ARRAY));
   if (p != NULL) {
     // check there will actually be room for the new value
     uint16_t oldVarLen = *(uint16_t*)p;
@@ -570,7 +570,7 @@ int createArray(char *name, int isString) {
   return 1;
 }
 
-int _getArrayElemOffset(unsigned char **p, int *pOffset) {
+int _getArrayElemOffset(uint8_t **p, int *pOffset) {
   // check for correct dimensionality
   int numArrayDims = *(uint16_t*)*p;
   *p += 2;
@@ -595,7 +595,7 @@ int _getArrayElemOffset(unsigned char **p, int *pOffset) {
 
 int setNumArrayElem(char *name, float val) {
   // each index and number of dimensions on the calculator stack
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM_ARRAY);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM_ARRAY);
   if (p == NULL)
     return ERROR_VARIABLE_NOT_FOUND;
   p += 3 + strlen(name) + 1;
@@ -619,8 +619,8 @@ int setStrArrayElem(char *name) {
   char *newValPtr = stackPopStr();
   int newValLen = strlen(newValPtr);
 
-  unsigned char *p = findVariable(name, VAR_TYPE_STR_ARRAY);
-  unsigned char *p1 = p;	// so we can correct the length when done
+  uint8_t *p = findVariable(name, VAR_TYPE_STR_ARRAY);
+  uint8_t *p1 = p;	// so we can correct the length when done
   if (p == NULL)
     return ERROR_VARIABLE_NOT_FOUND;
 
@@ -652,7 +652,7 @@ int setStrArrayElem(char *name) {
 
 float lookupNumArrayElem(char *name, int *error) {
   // each index and number of dimensions on the calculator stack
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM_ARRAY);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM_ARRAY);
   if (p == NULL) {
     *error = ERROR_VARIABLE_NOT_FOUND;
     return 0.0f;
@@ -671,7 +671,7 @@ float lookupNumArrayElem(char *name, int *error) {
 
 char *lookupStrArrayElem(char *name, int *error) {
   // each index and number of dimensions on the calculator stack
-  unsigned char *p = findVariable(name, VAR_TYPE_STR_ARRAY);
+  uint8_t *p = findVariable(name, VAR_TYPE_STR_ARRAY);
   if (p == NULL) {
     *error = ERROR_VARIABLE_NOT_FOUND;
     return NULL;
@@ -694,7 +694,7 @@ char *lookupStrArrayElem(char *name, int *error) {
 }
 
 float lookupNumVariable(char *name) {
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p == NULL) {
     return FLT_MAX;
   }
@@ -703,7 +703,7 @@ float lookupNumVariable(char *name) {
 }
 
 char *lookupStrVariable(char *name) {
-  unsigned char *p = findVariable(name, VAR_TYPE_STRING);
+  uint8_t *p = findVariable(name, VAR_TYPE_STRING);
   if (p == NULL) {
     return NULL;
   }
@@ -713,7 +713,7 @@ char *lookupStrVariable(char *name) {
 
 ForNextData lookupForNextVariable(char *name) {
   ForNextData ret;
-  unsigned char *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
+  uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p == NULL)
     ret.val = FLT_MAX;
   else if (*(p + 2) != VAR_TYPE_FORNEXT)
@@ -772,7 +772,7 @@ int gosubStackPop(int *lineNumber, int *stmtNumber) {
    LEXER
  * **************************************************************************/
 
-static unsigned char *tokenIn, *tokenOut;
+static uint8_t *tokenIn, *tokenOut;
 static int tokenOutLeft;
 
 // nextToken returns -1 for end of input, 0 for success, +ve number = error code
@@ -904,7 +904,7 @@ int nextToken()
   return ERROR_LEXER_UNEXPECTED_INPUT;
 }
 
-int tokenize(unsigned char *input, unsigned char *output, int outputSize)
+int tokenize(uint8_t *input, uint8_t *output, int outputSize)
 {
   tokenIn = input;
   tokenOut = output;
@@ -929,7 +929,7 @@ static uint16_t jumpLineNumber, jumpStmtNumber;
 static uint16_t stopLineNumber, stopStmtNumber;
 static char breakCurrentLine;
 
-static unsigned char *tokenBuffer, *prevToken;
+static uint8_t *tokenBuffer, *prevToken;
 static int curToken;
 static char identVal[MAX_IDENT_LEN + 1];
 static char isStrIdent;
@@ -1061,8 +1061,8 @@ int parseFnCallExpr() {
         {
           // tokenise str onto the stack
           int oldStackEnd = sysSTACKEND;
-          unsigned char *oldTokenBuffer = prevToken;
-          int val = tokenize((unsigned char*)stackGetStr(), &mem[sysSTACKEND], sysVARSTART - sysSTACKEND);
+          uint8_t *oldTokenBuffer = prevToken;
+          int val = tokenize((uint8_t*)stackGetStr(), &mem[sysSTACKEND], sysVARSTART - sysSTACKEND);
           if (val) {
             if (val == ERROR_LEXER_TOO_LONG) return ERROR_OUT_OF_MEMORY;
             else return ERROR_IN_VAL_INPUT;
@@ -1515,8 +1515,8 @@ int parseTwoIntCmd() {
   val = expectNumber();
   if (val) return val;	// error
   if (executeMode) {
-    int second = (int)stackPopNum();
-    int first = (int)stackPopNum();
+    uint8_t second = (uint8_t)stackPopNum();
+    uint8_t first = (uint8_t)stackPopNum();
     switch (op) {
       case TOKEN_POSITION:
         host_moveCursor(first, second);
@@ -1882,14 +1882,14 @@ int parseStmts()
   return ret;
 }
 
-int processInput(unsigned char *tokenBuf) {
+int processInput(uint8_t *tokenBuf) {
   // first token can be TOKEN_INTEGER for line number - stored as a float in numVal
   // store as WORD line number (max 65535)
   tokenBuffer = tokenBuf;
   getNextToken();
   // check for a line number at the start
   uint16_t gotLineNumber = 0;
-  unsigned char *lineStartPtr = 0;
+  uint8_t *lineStartPtr = 0;
   if (curToken == TOKEN_INTEGER) {
     long val = (long)numVal;
     if (val <= 65535) {
@@ -1916,7 +1916,7 @@ int processInput(unsigned char *tokenBuf) {
     tokenBuffer = tokenBuf;
     executeMode = 1;
     lineNumber = 0;	// buffer
-    unsigned char *p;
+    uint8_t *p;
 
     while (1) {
       getNextToken();

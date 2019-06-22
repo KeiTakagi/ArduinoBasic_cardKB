@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.22
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -31,7 +31,7 @@ void host_click();
 void host_startupTone();
 void host_cls();
 void host_showBuffer();
-void host_moveCursor(int x, int y);
+void host_moveCursor(uint8_t x, uint8_t y);
 void host_outputString(char *str);
 void host_outputProgMemString(const char *str);
 void host_outputChar(char c);
@@ -53,8 +53,12 @@ void host_loadProgram();
 #define Clr_Bit(val, bitn)    (val&=~(1<<(bitn)))
 #define Get_Bit(val, bitn)    (val &(1<<(bitn)) )
 
+#define shiftPressed (PINB & 0x10 ) != 0x10
+#define symPressed (PINB & 0x80 ) != 0x80
+#define fnPressed (PINB & 0x40 ) != 0x40
+
 //       d0   d1     d2  d3 d4 d5 d6 d7 d8 d9 d10 d11
-//A3�F   esc   1      2  3  4  5  6  7  8  9  0   del
+//A3：   esc   1      2  3  4  5  6  7  8  9  0   del
 //A2:    tab   q      w  e  r  t  y  u  i  o  p
 //A1:   left   up     a  s  d  f  g  h  j  k  l   enter
 //A0:   down   right  z  x  c  v  b  n  m  ,  .   space
@@ -116,18 +120,12 @@ const uint8_t PROGMEM KeyMap[48][7] =
 const uint8_t PROGMEM pinDmap[] = {254, 253, 251, 247, 239, 223, 191, 127};
 const uint8_t PROGMEM pinBmap[] = {222, 221, 219, 215};
 
-#define shiftPressed (PINB & 0x10 ) != 0x10
-#define symPressed (PINB & 0x80 ) != 0x80
-#define fnPressed (PINB & 0x40 ) != 0x40
-
-void flashOn(void);
-void flashOff(void);
+void flashOn(byte r, byte g, byte b);
 void keybordSetup(void);
-uint8_t GetInput(void);
-uint8_t getChar(void);
+byte getInput(void);
+byte getChar(void);
 
 #if EXTERNAL_EEPROM
-#include <I2cMaster.h>
 void writeExtEEPROM(unsigned int address, byte data);
 void host_directoryExtEEPROM();
 bool host_saveExtEEPROM(char *fileName);

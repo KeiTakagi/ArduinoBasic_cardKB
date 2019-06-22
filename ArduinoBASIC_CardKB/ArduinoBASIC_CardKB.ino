@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.9
+    @date 2019.6.22
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -25,12 +25,6 @@
 // If using an external EEPROM, you'll also have to initialise it by
 // running once with the appropriate lines enabled in setup() - see below
 
-#if EXTERNAL_EEPROM
-#include <I2cMaster.h>
-// Instance of class for hardware master with pullups enabled
-TwiMaster rtc(true);
-#endif
-
 // buzzer pin, 0 = disabled/not present
 #define BUZZER_PIN    0
 
@@ -47,7 +41,7 @@ char autorun = 0;
 void setup() {
   keybordSetup();
   oled.init();
-  
+
   reset();
   host_init(BUZZER_PIN);
   host_cls();

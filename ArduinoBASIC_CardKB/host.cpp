@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.22
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -19,13 +19,14 @@ extern SSD1306ASCII oled;
 extern EEPROMClass EEPROM;
 int timer1_counter;
 
-char screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-char lineDirty[SCREEN_HEIGHT];
+
+byte screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+byte lineDirty[SCREEN_HEIGHT];
 int curX = 0, curY = 0;
 volatile char flash = 0, redraw = 0;
-char inputMode = 0;
-char inkeyChar = 0;
-char buzPin = 0;
+byte inputMode = 0;
+byte inkeyChar = 0;
+byte buzPin = 0;
 
 const char bytesFreeStr[] PROGMEM = "bytes free";
 
@@ -108,7 +109,7 @@ void host_startupTone() {
   }
 }
 
-void host_moveCursor(int x, int y) {
+void host_moveCursor(uint8_t x, uint8_t y) {
   if (x < 0) x = 0;
   if (x >= SCREEN_WIDTH) x = SCREEN_WIDTH - 1;
   if (y < 0) y = 0;
@@ -155,7 +156,7 @@ void host_outputString(char *str) {
 
 void host_outputProgMemString(const char *p) {
   while (1) {
-    unsigned char c = pgm_read_byte(p++);
+    uint8_t c = pgm_read_byte(p++);
     if (c == 0) break;
     host_outputChar(c);
   }
@@ -327,11 +328,10 @@ void host_loadProgram() {
     mem[i] = EEPROM.read(i + 3);
 }
 
-void flashOn(void) {
-  pixels.setPixelColor(0, pixels.Color(3, 3, 3)); pixels.show();
-}
-void flashOff(void) {
-  pixels.setPixelColor(0, pixels.Color(0, 0, 0)); pixels.show();
+//-----------------------------------------------------------------------------
+
+void flashOn(byte r, byte g, byte b) {
+  pixels.setPixelColor(0, pixels.Color(r, g, b)); pixels.show();
 }
 
 void keybordSetup(void) {
@@ -346,22 +346,22 @@ void keybordSetup(void) {
   PORTD = 0xff;
 
   pixels.begin();
-  for (uint8_t j = 0; j < 3; j++) {
-    for (uint8_t i = 0; i < 5; i++) {
-      pixels.setPixelColor(0, pixels.Color(i, i, i)); pixels.show();
+  for (byte j = 0; j < 3; j++) {
+    for (byte i = 0; i < 5; i++) {
+      flashOn(i, i, i);
       delay(10);
     }
-    for (uint8_t i = 5; i > 0; i--) {
-      pixels.setPixelColor(0, pixels.Color(i, i, i)); pixels.show();
+    for (byte i = 5; i > 0; i--) {
+      flashOn(i, i, i);
       delay(10);
     }
   }
-  pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+  flashOn(0, 0, 0);
 }
 
-uint8_t GetInput(void) {
-  uint8_t ret = 0;
-  uint8_t i, j;
+byte getInput(void) {
+  byte ret = 0;
+  byte i, j;
   hadPressed = 1;
   for (i = 0; i < 4; i++) {
     digitalWrite(A3, (0b00001110 >> i) & 0b00000001);
@@ -373,9 +373,9 @@ uint8_t GetInput(void) {
       ret++;
       if (PIND == pgm_read_byte(&pinDmap[j])) {
         while (PIND != 0xff) {
-          flashOn();
+          flashOn(3, 3, 3);
         }
-        flashOff();
+        flashOn(0, 0, 0);
         return ret;
       }
     }
@@ -383,9 +383,9 @@ uint8_t GetInput(void) {
       ret++;
       if (PINB == pgm_read_byte(&pinBmap[j])) {
         while (PINB != 223) {
-          flashOn();
+          flashOn(3, 3, 3);
         }
-        flashOff();
+        flashOn(0, 0, 0);
         return ret;
       }
     }
@@ -394,9 +394,9 @@ uint8_t GetInput(void) {
   return 0;
 }
 
-uint8_t getChar(void)
+byte getChar(void)
 {
-  uint8_t c = 0;
+  byte c = 0;
 
   if (shiftPressed) {
     _sym = 0; _fn = 0; idle = 0;
@@ -492,40 +492,37 @@ uint8_t getChar(void)
   }
   switch (Mode) {
     case 0://normal
-      pixels.setPixelColor(0, pixels.Color(0, 0, 0));
-      break;
+      flashOn(0, 0, 0); break;
     case 1://shift
       if ((idle / 6) % 2 == 1) {
-        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        flashOn(0, 0, 0);
       } else {
-        pixels.setPixelColor(0, pixels.Color(5, 0, 0));
+        flashOn(5, 0, 0);
       }
       break;
     case 2://long_shift
-      pixels.setPixelColor(0, pixels.Color(5, 0, 0));
-      break;
+      flashOn(5, 0, 0); break;
     case 3://sym
       if ((idle / 6) % 2 == 1) {
-        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        flashOn(0, 0, 0);
       } else {
-        pixels.setPixelColor(0, pixels.Color(0, 5, 0));
+        flashOn(5, 0, 0);
       }
       break;
     case 4://long_sym
-      pixels.setPixelColor(0, pixels.Color(0, 5, 0)); break;
+      flashOn(0, 5, 0); break;
     case 5://fn
       if ((idle / 6) % 2 == 1) {
-        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        flashOn(0, 0, 0);
       } else {
-        pixels.setPixelColor(0, pixels.Color(0, 0, 5));
+        flashOn(0, 0, 5);
       }
       break;
     case 6://long_fn
-      pixels.setPixelColor(0, pixels.Color(0, 0, 5)); break;
+      flashOn(0, 0, 5); break;
   }
-  pixels.show(); // This sends the updated pixel color to the hardware.
   if (hadPressed == 0) {
-    KEY = GetInput();
+    KEY = getInput();
     if (hadPressed == 1) {
       c = pgm_read_byte(&KeyMap[KEY - 1][Mode]);
       if ((Mode == 1) || (Mode == 3) || (Mode == 5)) {
@@ -541,29 +538,33 @@ uint8_t getChar(void)
   return c;
 }
 
+
+//-----------------------------------------------------------------------------
+
 #if EXTERNAL_EEPROM
-#include <I2cMaster.h>
-extern TwiMaster rtc;
+#include <Wire.h>
 
 void writeExtEEPROM(unsigned int address, byte data)
 {
-  if (address % 32 == 0) host_click();
-  rtc.start((EXTERNAL_EEPROM_ADDR << 1) | I2C_WRITE);
-  rtc.write((int)(address >> 8));   // MSB
-  rtc.write((int)(address & 0xFF)); // LSB
-  rtc.write(data);
-  rtc.stop();
+  //  if (address % 32 == 0) host_click();
+  uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
+  Wire.beginTransmission(i2caddr);
+  Wire.write((byte)(address >> 8));   // MSB
+  Wire.write((byte)(address & 0xFF)); // LSB
+  Wire.write(data);
+  Wire.endTransmission();
   delay(5);
 }
 
 byte readExtEEPROM(unsigned int address)
 {
-  rtc.start((EXTERNAL_EEPROM_ADDR << 1) | I2C_WRITE);
-  rtc.write((int)(address >> 8));   // MSB
-  rtc.write((int)(address & 0xFF)); // LSB
-  rtc.restart((EXTERNAL_EEPROM_ADDR << 1) | I2C_READ);
-  byte b = rtc.read(true);
-  rtc.stop();
+  uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
+  Wire.beginTransmission(i2caddr);
+  Wire.write((byte)(address >> 8));   // MSB
+  Wire.write((byte)(address & 0xFF)); // LSB
+  Wire.endTransmission();
+  Wire.requestFrom(i2caddr, (uint8_t)1);
+  byte b = Wire.read();
   return b;
 }
 
@@ -571,9 +572,8 @@ byte readExtEEPROM(unsigned int address)
 unsigned int getExtEEPROMAddr(char *fileName) {
   unsigned int addr = 0;
   while (1) {
-    unsigned int len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
+    uint16_t len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
     if (len == 0) break;
-
     if (fileName) {
       bool found = true;
       for (int i = 0; i <= strlen(fileName); i++) {
@@ -598,13 +598,13 @@ void host_directoryExtEEPROM() {
     while (1) {
       char ch = readExtEEPROM(addr + 2 + i);
       if (!ch) break;
-      host_outputChar(readExtEEPROM(addr + 2 + i));
+      //      host_outputChar(readExtEEPROM(addr + 2 + i));
       i++;
     }
     addr += len;
-    host_outputChar(' ');
+    //host_outputChar(' ');
   }
-  host_outputFreeMem(EXTERNAL_EEPROM_SIZE - addr - 2);
+  //  host_outputFreeMem(EXTERNAL_EEPROM_SIZE - addr - 2);
 }
 
 bool host_removeExtEEPROM(char *fileName) {
@@ -624,12 +624,15 @@ bool host_removeExtEEPROM(char *fileName) {
 bool host_loadExtEEPROM(char *fileName) {
   unsigned int addr = getExtEEPROMAddr(fileName);
   if (addr == EXTERNAL_EEPROM_SIZE) return false;
+
   // skip filename
   addr += 2;
   while (readExtEEPROM(addr++)) ;
   sysPROGEND = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
-  for (int i = 0; i < sysPROGEND; i++)
+  for (uint16_t i = 0; i < sysPROGEND; i++) {
     mem[i] = readExtEEPROM(addr + 2 + i);
+  }
+  return true;
 }
 
 bool host_saveExtEEPROM(char *fileName) {
@@ -637,22 +640,26 @@ bool host_saveExtEEPROM(char *fileName) {
   if (addr != EXTERNAL_EEPROM_SIZE)
     host_removeExtEEPROM(fileName);
   addr = getExtEEPROMAddr(NULL);
-  unsigned int fileNameLen = strlen(fileName);
-  unsigned int len = 2 + fileNameLen + 1 + 2 + sysPROGEND;
-  if ((long)EXTERNAL_EEPROM_SIZE - addr - len - 2 < 0)
+  uint8_t fileNameLen = strlen(fileName);
+  uint16_t len = 2 + fileNameLen + 1 + 2 + sysPROGEND;
+  if ((uint16_t)EXTERNAL_EEPROM_SIZE - addr - len - 2 < 0)
     return false;
+
   // write overall length
   writeExtEEPROM(addr++, len & 0xFF);
   writeExtEEPROM(addr++, (len >> 8) & 0xFF);
+
   // write filename
-  for (int i = 0; i < strlen(fileName); i++)
+  for (uint8_t i = 0; i < strlen(fileName); i++)
     writeExtEEPROM(addr++, fileName[i]);
   writeExtEEPROM(addr++, 0);
+
   // write length & program
   writeExtEEPROM(addr++, sysPROGEND & 0xFF);
   writeExtEEPROM(addr++, (sysPROGEND >> 8) & 0xFF);
   for (int i = 0; i < sysPROGEND; i++)
     writeExtEEPROM(addr++, mem[i]);
+
   // 0 length marks end
   writeExtEEPROM(addr++, 0);
   writeExtEEPROM(addr++, 0);

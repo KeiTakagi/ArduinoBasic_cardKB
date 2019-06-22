@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.22
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -117,7 +117,7 @@
 #define MAX_NUMBER_LEN	                        10
 
 #define MEMORY_SIZE	                            1024
-extern unsigned char mem[];
+extern uint8_t mem[];
 extern int sysPROGEND;
 extern int sysSTACKSTART;
 extern int sysSTACKEND;
@@ -146,9 +146,8 @@ TokenTableEntry;
 //extern const char *errorTable[];
 extern const char* const errorTable[];
 
-
 void reset();
-int tokenize(unsigned char *input, unsigned char *output, int outputSize);
-int processInput(unsigned char *tokenBuf);
+int tokenize(uint8_t *input, uint8_t *output, int outputSize);
+int processInput(uint8_t *tokenBuf);
 
 #endif
