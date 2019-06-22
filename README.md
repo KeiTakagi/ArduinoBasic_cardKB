@@ -5,15 +5,30 @@
 
 
 ## ToDo
-- EEPROM:DIR
 - コード最適化
 - グラフィック関数(点,画面消去)
 - 三角関数
 
 ## EEPROMに対応しました
-EEPROM(24LC256など)を使用する場合、host.hの該当箇所を以下のように書き換えてください。
+EEPROM(24LC256など)を使用する場合、host.hを以下のように0から1へ書き換えてください。
 ```
+#define EXTERNAL_EEPROM         0
+
+  ↓↓
+
 #define EXTERNAL_EEPROM         1
+```
+初回、EEPROMを使用する場合コメントを外して実行するとEEPROMが初期化されます。初期化後は元に戻してください。コメントを戻さない場合、毎回初期化されます。
+```
+  // IF USING EXTERNAL EEPROM
+  // The following line 'wipes' the external EEPROM and prepares
+  // it for use. Uncomment it, upload the sketch, then comment it back
+  // in again and upload again, if you use a new EEPROM.
+  // writeExtEEPROM(0,0); writeExtEEPROM(1,0);
+
+  ↓↓
+
+     writeExtEEPROM(0,0); writeExtEEPROM(1,0);
 ```
 
 ## コンパイルの際の注意事項

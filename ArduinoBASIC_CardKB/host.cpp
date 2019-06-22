@@ -598,13 +598,13 @@ void host_directoryExtEEPROM() {
     while (1) {
       char ch = readExtEEPROM(addr + 2 + i);
       if (!ch) break;
-      //      host_outputChar(readExtEEPROM(addr + 2 + i));
+      host_outputChar(readExtEEPROM(addr + 2 + i));
       i++;
     }
     addr += len;
-    //host_outputChar(' ');
+    host_outputChar(' ');
   }
-  //  host_outputFreeMem(EXTERNAL_EEPROM_SIZE - addr - 2);
+  host_outputFreeMem(EXTERNAL_EEPROM_SIZE - addr - 2);
 }
 
 bool host_removeExtEEPROM(char *fileName) {
