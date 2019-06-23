@@ -16,6 +16,8 @@
 
 #include "Arduino.h"
 
+//#define OLED_DISPLAY
+
 #define WIRE_BUFMAX 32
 #define OLED_ADDR   0x3C
 #define OLED_WIDTH  128

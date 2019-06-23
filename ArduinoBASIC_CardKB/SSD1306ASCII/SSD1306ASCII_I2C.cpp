@@ -5,7 +5,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.6.23
 
     Copyright (c) 2019 Kei Takagi
 
@@ -60,30 +60,38 @@ void SSD1306ASCII::init() {
   Wire.setClock(400000);
   // Init sequence
   static const uint8_t PROGMEM init_seq[] = {
-    0xAE,                   // Display OFF (sleep mode) 
-    0x00,                   // 0Set Lower Column Start Address for Page Addressing Mode 
-    0x10,                   // Set Higher Column Start Address for Page Addressing Mode 
-    0x40,                   // Set Display Start Line
-    0xB0,                   // 
-    0x81,                   // set Contrast Control for BANK0
-    0x60,                   // [contrast]
-    0xA0,                   // segment remap  0XA1:mirrored writing 
-    0xA8,                   // multiplex ratio
-    0x1F,                   // duty = 1/32
-    0x32,                   // 0X30---0X33  set VPP   8V
-    0xC0,                   // Com scan direction   0XC8
-    0xD3,                   // Display offset(D3h, 00h)
-    0x00,                   //
-    0xD9,                   // Set Pre-charge Period 
-    0x22,                   // 0xf1
-    0xDA,                   // COM pins
-    0x02,                   // 0x2 ada x12
-    0xdb,                   // Set VCOMH Deselect Level
-    0x40,                   //
-    0x8d,                   // Enable charge pump regulator
-    0x14,
-    0xAF,                   // Display ON
-    0xA6                    // Normal display (RESET)
+    0xAE, // Display OFF (sleep mode) 
+    0x00, 
+    0x81, // set Contrast Control for BANK0
+    0x60, //  -> [contrast]
+    0x40, // Set Display Start Line 0x40-0x7F
+
+#ifndef OLED_DISPLAY
+    0xA0, // Display mode right/left - Nomal:0xA0 / mirrored writing:0xA1
+    0xC0, // Display mode up/down - Nomal:0xC0 / reverse:0xC8
+#else
+  	0xA1, // Display mode right/left - Nomal:0xA0 / mirrored writing:0xA1
+    0xC8, // Display mode up/down - Nomal:0xC0 / reverse:0xC8
+#endif
+
+    0xA8, // Set Multiplex Ratio  0xA8, 0x3F
+    0x1F, //  -> 0x1F - 0x3F
+    0xD3, // Display offset(D3h, 00h)
+    0x00, //  -> Set vertical shift by COM from 0-63 The value is reset to 0x00 after RESET. 
+    0xDA, // COM pins
+    0x00, //  -> 0x2 ada x12
+    0x20, // Set memory addressing mode
+    0x00, // Horizontal addressing mode
+    0x21, // Set column address
+    0x00, //  -> Column start address 0
+    0x7F, //  -> Column end address 127
+    0x22, // Set page address
+    0x00, //  -> Page start address 0
+    0x04, //  -> 0x04:Page end address 4  0x07:Page end address 7
+    0x8D, // Enable charge pump regulator
+    0x14, //  -> ON
+    0xAF, // Display ON
+    0xA6  // Normal display (RESET)
   };
   commandList(init_seq, sizeof(init_seq));
   clear();
