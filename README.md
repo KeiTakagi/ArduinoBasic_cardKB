@@ -1,13 +1,12 @@
 # CardKeyboardでArduinoBasicが動作する自作ポケコン
 [M5stak](https://m5stack.com/)用のCardKeyBoardとI2CのOLED(128x32)で、Robin Edwardsさんの[ArduinoBasic](https://github.com/robinhedwards/ArduinoBASIC)が動く自作ポケコンです。８０年代の家庭用コンピューターで使われていたBasic言語を実行することができます。I2CのOLED(128x64)をそのまま差し替えると縦に２倍拡大して表示されます。<br>
-
-![image](./img/img001.jpg)
-
+[![pocket computer](./img/img001.jpg)](https://youtu.be/O71nmI2AG5k)
 
 ## ToDo
 - コード最適化
 - グラフィック関数(点,画面消去)
 - 三角関数
+- UART
 
 ## EEPROMに対応しました
 EEPROM(24LC256など)を使用する場合、host.hを以下のように0から1へ書き換えてください。
