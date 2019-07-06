@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.22
+    @date 2019.7.6
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -15,13 +15,16 @@
 #define SCREEN_WIDTH            21
 #define SCREEN_HEIGHT           4
 
-#define EXTERNAL_EEPROM         0
+// BUZZER 0...BUZZER NONE PinNo...USE BUZZER PinNo
+#define BUZZER                  0
+
+#define EXTERNAL_EEPROM         1
 #define EXTERNAL_EEPROM_ADDR    0x50    // I2C address (7 bits)
 #define EXTERNAL_EEPROM_SIZE    32768   // only <=32k tested (64k might work?)
 
 #define MAGIC_AUTORUN_NUMBER    0xFC
 
-void host_init(int buzzerPin);
+void host_init(void);
 void host_sleep(long ms);
 void host_digitalWrite(int pin, int state);
 int host_digitalRead(int pin);

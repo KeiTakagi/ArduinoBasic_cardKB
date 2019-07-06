@@ -45,14 +45,13 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.22
+    @date 2019.7.6
 
     Copyright (c) 2019 Kei Takagi
 */
 
 
 // TODO
-// ABS, SIN, COS, EXP etc
 // DATA, READ, RESTORE
 
 #include <stdio.h>
@@ -142,9 +141,13 @@ const TokenTableEntry PROGMEM tokenTable[] = {
   {"STEP", TKN_FMT_PRE | TKN_FMT_POST}, {"NEXT", TKN_FMT_POST}, {"MOD", TKN_FMT_PRE | TKN_FMT_POST}, {"NEW", TKN_FMT_POST},
   {"GOSUB", TKN_FMT_POST}, {"RETURN", TKN_FMT_POST}, {"DIM", TKN_FMT_POST}, {"LEFT$", 2 | TKN_ARG1_TYPE_STR | TKN_RET_TYPE_STR},
   {"RIGHT$", 2 | TKN_ARG1_TYPE_STR | TKN_RET_TYPE_STR}, {"MID$", 3 | TKN_ARG1_TYPE_STR | TKN_RET_TYPE_STR}, {"CLS", TKN_FMT_POST}, {"PAUSE", TKN_FMT_POST},
-  {"POSITION", TKN_FMT_POST},  {"PIN", TKN_FMT_POST}, {"PINMODE", TKN_FMT_POST}, {"INKEY$", 0},
-  {"SAVE", TKN_FMT_POST}, {"LOAD", TKN_FMT_POST}, {"PINREAD", 1}, {"ANALOGRD", 1},
-  {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST}
+  {"POSITION", TKN_FMT_POST},
+  {"PIN", TKN_FMT_POST}, {"PINMODE", TKN_FMT_POST},
+  {"INKEY$", 0},
+  {"SAVE", TKN_FMT_POST}, {"LOAD", TKN_FMT_POST},
+  {"PINREAD", 1}, {"ANALOGRD", 1},
+  {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST},
+  {"SIN", 1}, {"COS", 1}, {"TAN", 1}, {"EXP", 1}, {"SQRT", 1}
 };
 
 
@@ -1118,6 +1121,22 @@ int parseFnCallExpr() {
         tmp = (int)stackPopNum();
         if (!stackPushNum(host_analogRead(tmp))) return ERROR_OUT_OF_MEMORY;
         break;
+      case TOKEN_SIN:     // SIN(number)
+        stackPushNum((float)sin(stackPopNum()));
+        break;
+      case TOKEN_COS:     // COS(number)
+        stackPushNum((float)cos(stackPopNum()));
+        break;
+      case TOKEN_TAN:     // TAN(number)
+        stackPushNum((float)tan(stackPopNum()));
+        break;
+      case TOKEN_EXP:     // EXP(number)
+        stackPushNum((float)exp(stackPopNum()));
+        break;
+      case TOKEN_SQRT:    // SQRT(number)
+        stackPushNum((float)sqrt( stackPopNum()));
+        break;
+
       default:
         return ERROR_UNEXPECTED_TOKEN;
     }
@@ -1263,6 +1282,11 @@ int parsePrimary() {
     case TOKEN_MID:
     case TOKEN_PINREAD:
     case TOKEN_ANALOGRD:
+    case TOKEN_SIN:
+    case TOKEN_COS:
+    case TOKEN_TAN:
+    case TOKEN_EXP:
+    case TOKEN_SQRT:
       return parseFnCallExpr();
 
     default:
@@ -1521,12 +1545,14 @@ int parseTwoIntCmd() {
       case TOKEN_POSITION:
         host_moveCursor(first, second);
         break;
+#if GPIO
       case TOKEN_PIN:
         host_digitalWrite(first, second);
         break;
       case TOKEN_PINMODE:
         host_pinMode(first, second);
         break;
+#endif
     }
   }
   return 0;
@@ -1841,8 +1867,10 @@ int parseStmts()
         break;
 
       case TOKEN_POSITION:
+#if GPIO
       case TOKEN_PIN:
       case TOKEN_PINMODE:
+#endif
         ret = parseTwoIntCmd();
         break;
 

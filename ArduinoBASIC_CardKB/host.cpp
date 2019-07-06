@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.22
+    @date 2019.7.6
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -22,11 +22,10 @@ int timer1_counter;
 
 byte screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 byte lineDirty[SCREEN_HEIGHT];
-int curX = 0, curY = 0;
+uint8_t curX = 0, curY = 0;
 volatile char flash = 0, redraw = 0;
 byte inputMode = 0;
 byte inkeyChar = 0;
-byte buzPin = 0;
 
 const char bytesFreeStr[] PROGMEM = "bytes free";
 
@@ -34,6 +33,7 @@ uint16_t idle = 0;
 uint8_t _shift = 0, _fn = 0, _sym = 0;
 uint8_t KEY = 0, hadPressed = 0;
 uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_shift 5->fn,6->long_fn
+
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 void initTimer() {
@@ -54,11 +54,11 @@ ISR(TIMER1_OVF_vect)        // interrupt service routine
   redraw = 1;
 }
 
-void host_init(int buzzerPin) {
-  buzPin = buzzerPin;
+void host_init() {
+#if BUZZER
+  pinMode(BUZZER, OUTPUT);
+#endif
   oled.clear();
-  if (buzPin)
-    pinMode(buzPin, OUTPUT);
   initTimer();
 }
 
@@ -83,30 +83,32 @@ void host_pinMode(int pin, int mode) {
 }
 
 void host_click() {
-  if (!buzPin) return;
-  digitalWrite(buzPin, HIGH);
+#if BUZZER
+  digitalWrite(BUZZER, HIGH);
   delay(1);
-  digitalWrite(buzPin, LOW);
+  digitalWrite(BUZZER, LOW);
+#endif
 }
 
 void host_cls() {
-  memset(screenBuffer, 32, SCREEN_WIDTH * SCREEN_HEIGHT);
+  memset(screenBuffer, 0x20, SCREEN_WIDTH * SCREEN_HEIGHT);
   memset(lineDirty, 1, SCREEN_HEIGHT);
   curX = 0;
   curY = 0;
 }
 
 void host_startupTone() {
-  if (!buzPin) return;
-  for (int i = 1; i <= 2; i++) {
-    for (int j = 0; j < 50 * i; j++) {
-      digitalWrite(buzPin, HIGH);
+#if BUZZER
+  for (uint8_t i = 1; i <= 2; i++) {
+    for (uint8_t j = 0; j < 50 * i; j++) {
+      digitalWrite(BUZZER, HIGH);
       delay(3 - i);
-      digitalWrite(buzPin, LOW);
+      digitalWrite(BUZZER, LOW);
       delay(3 - i);
     }
     delay(100);
   }
+#endif
 }
 
 void host_moveCursor(uint8_t x, uint8_t y) {
@@ -119,10 +121,10 @@ void host_moveCursor(uint8_t x, uint8_t y) {
 }
 
 void host_showBuffer() {
-  for (int y = 0; y < SCREEN_HEIGHT; y++) {
+  for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
     if (lineDirty[y] || (inputMode && y == curY)) {
       oled.setCursor(0, y);
-      for (int x = 0; x < SCREEN_WIDTH; x++) {
+      for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
         char c = screenBuffer[y * SCREEN_WIDTH + x];
         if (c < 32) c = ' ';
         if (x == curX && y == curY && inputMode && flash) c = 127;
@@ -135,13 +137,13 @@ void host_showBuffer() {
 
 void scrollBuffer() {
   memcpy(screenBuffer, screenBuffer + SCREEN_WIDTH, SCREEN_WIDTH * (SCREEN_HEIGHT - 1));
-  memset(screenBuffer + SCREEN_WIDTH * (SCREEN_HEIGHT - 1), 32, SCREEN_WIDTH);
+  memset(screenBuffer + SCREEN_WIDTH * (SCREEN_HEIGHT - 1), 0x20, SCREEN_WIDTH);
   memset(lineDirty, 1, SCREEN_HEIGHT);
   curY--;
 }
 
 void host_outputString(char *str) {
-  int pos = curY * SCREEN_WIDTH + curX;
+  uint8_t pos = curY * SCREEN_WIDTH + curX;
   while (*str) {
     lineDirty[pos / SCREEN_WIDTH] = 1;
     screenBuffer[pos++] = *str++;
@@ -163,7 +165,7 @@ void host_outputProgMemString(const char *p) {
 }
 
 void host_outputChar(char c) {
-  int pos = curY * SCREEN_WIDTH + curX;
+  uint8_t pos = curY * SCREEN_WIDTH + curX;
   lineDirty[pos / SCREEN_WIDTH] = 1;
   screenBuffer[pos++] = c;
   if (pos >= SCREEN_WIDTH * SCREEN_HEIGHT) {
@@ -231,18 +233,18 @@ void host_newLine() {
   curY++;
   if (curY == SCREEN_HEIGHT)
     scrollBuffer();
-  memset(screenBuffer + SCREEN_WIDTH * (curY), 32, SCREEN_WIDTH);
+  memset(screenBuffer + SCREEN_WIDTH * (curY), 0x20, SCREEN_WIDTH);
   lineDirty[curY] = 1;
 }
 
 char *host_readLine() {
   inputMode = 1;
 
-  if (curX == 0) memset(screenBuffer + SCREEN_WIDTH * (curY), 32, SCREEN_WIDTH);
+  if (curX == 0) memset(screenBuffer + SCREEN_WIDTH * (curY), 0x20, SCREEN_WIDTH);
   else host_newLine();
 
-  int startPos = curY * SCREEN_WIDTH + curX;
-  int pos = startPos;
+  uint8_t startPos = curY * SCREEN_WIDTH + curX;
+  uint8_t pos = startPos;
 
   bool done = false;
   char c;
@@ -305,7 +307,7 @@ bool host_ESCPressed() {
   return false;
 }
 
-void host_outputFreeMem(unsigned int val)
+void host_outputFreeMem(uint16_t val)
 {
   host_newLine();
   host_outputInt(val);
@@ -544,7 +546,7 @@ byte getChar(void)
 #if EXTERNAL_EEPROM
 #include <Wire.h>
 
-void writeExtEEPROM(unsigned int address, byte data)
+void writeExtEEPROM(uint16_t address, byte data)
 {
   //  if (address % 32 == 0) host_click();
   uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
@@ -556,7 +558,7 @@ void writeExtEEPROM(unsigned int address, byte data)
   delay(5);
 }
 
-byte readExtEEPROM(unsigned int address)
+byte readExtEEPROM(uint16_t address)
 {
   uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
   Wire.beginTransmission(i2caddr);
@@ -569,8 +571,8 @@ byte readExtEEPROM(unsigned int address)
 }
 
 // get the EEPROM address of a file, or the end if fileName is null
-unsigned int getExtEEPROMAddr(char *fileName) {
-  unsigned int addr = 0;
+uint16_t getExtEEPROMAddr(char *fileName) {
+  uint16_t addr = 0;
   while (1) {
     uint16_t len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
     if (len == 0) break;
@@ -590,9 +592,9 @@ unsigned int getExtEEPROMAddr(char *fileName) {
 }
 
 void host_directoryExtEEPROM() {
-  unsigned int addr = 0;
+  uint16_t addr = 0;
   while (1) {
-    unsigned int len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
+    uint16_t len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
     if (len == 0) break;
     int i = 0;
     while (1) {
@@ -608,11 +610,11 @@ void host_directoryExtEEPROM() {
 }
 
 bool host_removeExtEEPROM(char *fileName) {
-  unsigned int addr = getExtEEPROMAddr(fileName);
+  uint16_t addr = getExtEEPROMAddr(fileName);
   if (addr == EXTERNAL_EEPROM_SIZE) return false;
-  unsigned int len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
-  unsigned int last = getExtEEPROMAddr(NULL);
-  unsigned int count = 2 + last - (addr + len);
+  uint16_t len = readExtEEPROM(addr) | (readExtEEPROM(addr + 1) << 8);
+  uint16_t last = getExtEEPROMAddr(NULL);
+  uint16_t count = 2 + last - (addr + len);
   while (count--) {
     byte b = readExtEEPROM(addr + len);
     writeExtEEPROM(addr, b);
@@ -622,7 +624,7 @@ bool host_removeExtEEPROM(char *fileName) {
 }
 
 bool host_loadExtEEPROM(char *fileName) {
-  unsigned int addr = getExtEEPROMAddr(fileName);
+  uint16_t addr = getExtEEPROMAddr(fileName);
   if (addr == EXTERNAL_EEPROM_SIZE) return false;
 
   // skip filename
@@ -636,7 +638,7 @@ bool host_loadExtEEPROM(char *fileName) {
 }
 
 bool host_saveExtEEPROM(char *fileName) {
-  unsigned int addr = getExtEEPROMAddr(fileName);
+  uint16_t addr = getExtEEPROMAddr(fileName);
   if (addr != EXTERNAL_EEPROM_SIZE)
     host_removeExtEEPROM(fileName);
   addr = getExtEEPROMAddr(NULL);
@@ -657,7 +659,7 @@ bool host_saveExtEEPROM(char *fileName) {
   // write length & program
   writeExtEEPROM(addr++, sysPROGEND & 0xFF);
   writeExtEEPROM(addr++, (sysPROGEND >> 8) & 0xFF);
-  for (int i = 0; i < sysPROGEND; i++)
+  for (uint16_t i = 0; i < sysPROGEND; i++)
     writeExtEEPROM(addr++, mem[i]);
 
   // 0 length marks end

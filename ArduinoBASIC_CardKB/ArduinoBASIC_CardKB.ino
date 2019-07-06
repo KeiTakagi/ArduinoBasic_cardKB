@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.22
+    @date 2019.7.6
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -31,19 +31,19 @@
 // OLED
 SSD1306ASCII oled;
 
-unsigned char mem[MEMORY_SIZE];
+uint8_t mem[MEMORY_SIZE];
 #define TOKEN_BUF_SIZE    64
-unsigned char tokenBuf[TOKEN_BUF_SIZE];
+uint8_t tokenBuf[TOKEN_BUF_SIZE];
 
 const char welcomeStr[] PROGMEM = "Arduino BASIC";
-char autorun = 0;
+uint8_t autorun = 0;
 
 void setup() {
   keybordSetup();
   oled.init();
 
   reset();
-  host_init(BUZZER_PIN);
+  host_init();
   host_cls();
   host_outputProgMemString(welcomeStr);
   // show memory size

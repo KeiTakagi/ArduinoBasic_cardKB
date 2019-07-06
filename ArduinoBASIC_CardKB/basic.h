@@ -4,13 +4,16 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.22
+    @date 2019.7.6
 
     Copyright (c) 2019 Kei Takagi
 */
 
 #ifndef _BASIC_H
 #define _BASIC_H
+
+//GPIO 1...USE GPIO   0...GPIO NONE
+#define GPIO                    0
 
 #include <stdint.h>
 
@@ -78,9 +81,14 @@
 #define TOKEN_ANALOGRD          63
 #define TOKEN_DIR               64
 #define TOKEN_DELETE            65
+#define TOKEN_SIN               66
+#define TOKEN_COS               67
+#define TOKEN_TAN               68
+#define TOKEN_EXP               69
+#define TOKEN_SQRT              70
 
 #define FIRST_IDENT_TOKEN       23
-#define LAST_IDENT_TOKEN        65
+#define LAST_IDENT_TOKEN        70
 
 #define FIRST_NON_ALPHA_TOKEN   8
 #define LAST_NON_ALPHA_TOKEN    22
