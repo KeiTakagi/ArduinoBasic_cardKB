@@ -52,3 +52,17 @@ EEPROM(24LC256など)を使用する場合、host.hを以下のように0から1
 ## ヒューズビット
 初期値のまま書き換えないでください。<br>
 ![image](./img/img004.PNG)<br>
+
+## 1.3インチ I2C OLED 128×64に対応しました
+SSD1306ASCII_I2C.hを以下のように修正してください。<br>
+注意：0.96インチ I2C OLED 128×64は128×32として動作を想定しています。想定した動作をしないかもしれません。<br>
+```
+#define OLED_WIDTH  128
+//#define OLED_HEIGHT 32
+#define OLED_HEIGHT 64
+
+#define OLED_COLMAX 21
+//#define OLED_ROWMAX 4
+#define OLED_ROWMAX 8
+```
+![image](./img/img011.jpg)
