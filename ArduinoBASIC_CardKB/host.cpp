@@ -1,10 +1,10 @@
 /*
     @file host.cpp
-    @brief Modified Arduino Basic to work with cardKeyboard and OLED 128x32.
+    @brief Modified Arduino Basic to work with cardKeyboard and I2C OLED 128x32 or 128x64.
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.6
+    @date 2019.7.15
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -20,8 +20,8 @@ extern EEPROMClass EEPROM;
 int timer1_counter;
 
 
-byte screenBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-byte lineDirty[SCREEN_HEIGHT];
+byte screenBuffer[OLED_COLMAX * OLED_ROWMAX];
+byte lineDirty[OLED_ROWMAX];
 uint8_t curX = 0, curY = 0;
 volatile char flash = 0, redraw = 0;
 byte inputMode = 0;
@@ -34,7 +34,7 @@ uint8_t _shift = 0, _fn = 0, _sym = 0;
 uint8_t KEY = 0, hadPressed = 0;
 uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_shift 5->fn,6->long_fn
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 void initTimer() {
   noInterrupts();           // disable all interrupts
@@ -91,8 +91,8 @@ void host_click() {
 }
 
 void host_cls() {
-  memset(screenBuffer, 0x20, SCREEN_WIDTH * SCREEN_HEIGHT);
-  memset(lineDirty, 1, SCREEN_HEIGHT);
+  memset(screenBuffer, 0x20, OLED_COLMAX * OLED_ROWMAX);
+  memset(lineDirty, 1, OLED_ROWMAX);
   curX = 0;
   curY = 0;
 }
@@ -113,19 +113,19 @@ void host_startupTone() {
 
 void host_moveCursor(uint8_t x, uint8_t y) {
   if (x < 0) x = 0;
-  if (x >= SCREEN_WIDTH) x = SCREEN_WIDTH - 1;
+  if (x >= OLED_COLMAX) x = OLED_COLMAX - 1;
   if (y < 0) y = 0;
-  if (y >= SCREEN_HEIGHT) y = SCREEN_HEIGHT - 1;
+  if (y >= OLED_ROWMAX) y = OLED_ROWMAX - 1;
   curX = x;
   curY = y;
 }
 
 void host_showBuffer() {
-  for (uint8_t y = 0; y < SCREEN_HEIGHT; y++) {
+  for (uint8_t y = 0; y < OLED_ROWMAX; y++) {
     if (lineDirty[y] || (inputMode && y == curY)) {
       oled.setCursor(0, y);
-      for (uint8_t x = 0; x < SCREEN_WIDTH; x++) {
-        char c = screenBuffer[y * SCREEN_WIDTH + x];
+      for (uint8_t x = 0; x < OLED_COLMAX; x++) {
+        char c = screenBuffer[y * OLED_COLMAX + x];
         if (c < 32) c = ' ';
         if (x == curX && y == curY && inputMode && flash) c = 127;
         oled.print(c);
@@ -136,24 +136,24 @@ void host_showBuffer() {
 }
 
 void scrollBuffer() {
-  memcpy(screenBuffer, screenBuffer + SCREEN_WIDTH, SCREEN_WIDTH * (SCREEN_HEIGHT - 1));
-  memset(screenBuffer + SCREEN_WIDTH * (SCREEN_HEIGHT - 1), 0x20, SCREEN_WIDTH);
-  memset(lineDirty, 1, SCREEN_HEIGHT);
+  memcpy(screenBuffer, screenBuffer + OLED_COLMAX, OLED_COLMAX * (OLED_ROWMAX - 1));
+  memset(screenBuffer + OLED_COLMAX * (OLED_ROWMAX - 1), 0x20, OLED_COLMAX);
+  memset(lineDirty, 1, OLED_ROWMAX);
   curY--;
 }
 
 void host_outputString(char *str) {
-  uint8_t pos = curY * SCREEN_WIDTH + curX;
+  uint8_t pos = curY * OLED_COLMAX + curX;
   while (*str) {
-    lineDirty[pos / SCREEN_WIDTH] = 1;
+    lineDirty[pos / OLED_COLMAX] = 1;
     screenBuffer[pos++] = *str++;
-    if (pos >= SCREEN_WIDTH * SCREEN_HEIGHT) {
+    if (pos >= OLED_COLMAX * OLED_ROWMAX) {
       scrollBuffer();
-      pos -= SCREEN_WIDTH;
+      pos -= OLED_COLMAX;
     }
   }
-  curX = pos % SCREEN_WIDTH;
-  curY = pos / SCREEN_WIDTH;
+  curX = pos % OLED_COLMAX;
+  curY = pos / OLED_COLMAX;
 }
 
 void host_outputProgMemString(const char *p) {
@@ -165,15 +165,15 @@ void host_outputProgMemString(const char *p) {
 }
 
 void host_outputChar(char c) {
-  uint8_t pos = curY * SCREEN_WIDTH + curX;
-  lineDirty[pos / SCREEN_WIDTH] = 1;
+  uint8_t pos = curY * OLED_COLMAX + curX;
+  lineDirty[pos / OLED_COLMAX] = 1;
   screenBuffer[pos++] = c;
-  if (pos >= SCREEN_WIDTH * SCREEN_HEIGHT) {
+  if (pos >= OLED_COLMAX * OLED_ROWMAX) {
     scrollBuffer();
-    pos -= SCREEN_WIDTH;
+    pos -= OLED_COLMAX;
   }
-  curX = pos % SCREEN_WIDTH;
-  curY = pos / SCREEN_WIDTH;
+  curX = pos % OLED_COLMAX;
+  curY = pos / OLED_COLMAX;
 }
 
 int host_outputInt(long num) {
@@ -231,19 +231,19 @@ void host_outputFloat(float f) {
 void host_newLine() {
   curX = 0;
   curY++;
-  if (curY == SCREEN_HEIGHT)
+  if (curY == OLED_ROWMAX)
     scrollBuffer();
-  memset(screenBuffer + SCREEN_WIDTH * (curY), 0x20, SCREEN_WIDTH);
+  memset(screenBuffer + OLED_COLMAX * (curY), 0x20, OLED_COLMAX);
   lineDirty[curY] = 1;
 }
 
 char *host_readLine() {
   inputMode = 1;
 
-  if (curX == 0) memset(screenBuffer + SCREEN_WIDTH * (curY), 0x20, SCREEN_WIDTH);
+  if (curX == 0) memset(screenBuffer + OLED_COLMAX * (curY), 0x20, OLED_COLMAX);
   else host_newLine();
 
-  uint8_t startPos = curY * SCREEN_WIDTH + curX;
+  uint8_t startPos = curY * OLED_COLMAX + curX;
   uint8_t pos = startPos;
 
   bool done = false;
@@ -252,27 +252,27 @@ char *host_readLine() {
     while (c = getChar()) {
       host_click();
       // read the next key
-      lineDirty[pos / SCREEN_WIDTH] = 1;
+      lineDirty[pos / OLED_COLMAX] = 1;
       if (c >= 32 && c <= 126)
         screenBuffer[pos++] = c;
       else if (c == 0x08 && pos > startPos) //DELETE
         screenBuffer[--pos] = 0;
       else if (c == 0x0D) // ENTER
         done = true;
-      curX = pos % SCREEN_WIDTH;
-      curY = pos / SCREEN_WIDTH;
+      curX = pos % OLED_COLMAX;
+      curY = pos / OLED_COLMAX;
       // scroll if we need to
-      if (curY == SCREEN_HEIGHT) {
-        if (startPos >= SCREEN_WIDTH) {
-          startPos -= SCREEN_WIDTH;
-          pos -= SCREEN_WIDTH;
+      if (curY == OLED_ROWMAX) {
+        if (startPos >= OLED_COLMAX) {
+          startPos -= OLED_COLMAX;
+          pos -= OLED_COLMAX;
           scrollBuffer();
         }
         else
         {
           screenBuffer[--pos] = 0;
-          curX = pos % SCREEN_WIDTH;
-          curY = pos / SCREEN_WIDTH;
+          curX = pos % OLED_COLMAX;
+          curY = pos / OLED_COLMAX;
         }
       }
       redraw = 1;

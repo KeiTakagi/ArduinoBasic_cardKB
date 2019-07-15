@@ -1,19 +1,16 @@
 /*
     @file host.h
-    @brief Modified Arduino Basic to work with cardKeyboard and OLED 128x32.
+    @brief Modified Arduino Basic to work with cardKeyboard and I2C OLED 128x32 or 128x64.
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.6
+    @date 2019.7.15
 
     Copyright (c) 2019 Kei Takagi
 */
 
 #include <stdint.h>
 #include <Adafruit_NeoPixel.h>
-
-#define SCREEN_WIDTH            21
-#define SCREEN_HEIGHT           4
 
 // BUZZER 0...BUZZER NONE PinNo...USE BUZZER PinNo
 #define BUZZER                  0
@@ -50,7 +47,7 @@ void host_saveProgram(bool autoexec);
 void host_loadProgram();
 
 #define NUMPIXELS      1
-#define PIN           13
+#define LEDPIN        13
 
 #define Set_Bit(val, bitn)    (val |=(1<<(bitn)))
 #define Clr_Bit(val, bitn)    (val&=~(1<<(bitn)))

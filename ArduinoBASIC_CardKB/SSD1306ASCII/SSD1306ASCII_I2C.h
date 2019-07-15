@@ -1,11 +1,11 @@
 /*
 
     @file SSD1306ASCII_I2C.h
-    @brief SSD1306ASCII OLED 128x32 
+    @brief SSD1306ASCII I2C OLED 128x32 or 128x64.
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.6.8
+    @date 2019.7.15
 
     Copyright (c) 2019 Kei Takagi
 
@@ -16,14 +16,19 @@
 
 #include "Arduino.h"
 
-//#define OLED_DISPLAY
+//OLED_DISPLAY 0...NORMAL 1...REVERSE
+#define OLED_DISPLAY 0
 
 #define WIRE_BUFMAX 32
 #define OLED_ADDR   0x3C
+
 #define OLED_WIDTH  128
 #define OLED_HEIGHT 32
+//#define OLED_HEIGHT 64
+
 #define OLED_COLMAX 21
 #define OLED_ROWMAX 4
+//#define OLED_ROWMAX 8
 
 #define BLACK       0 ///< Draw 'off' pixels
 #define WHITE       1 ///< Draw 'on' pixels

@@ -1,6 +1,6 @@
 /*
     @file basic.h
-    @brief Modified Arduino Basic to work with cardKeyboard and OLED 128x32.
+    @brief Modified Arduino Basic to work with cardKeyboard and I2C OLED 128x32 or 128x64.
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
