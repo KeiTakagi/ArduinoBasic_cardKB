@@ -147,7 +147,7 @@ const TokenTableEntry PROGMEM tokenTable[] = {
   {"SAVE", TKN_FMT_POST}, {"LOAD", TKN_FMT_POST},
   {"PINREAD", 1}, {"ANALOGRD", 1},
   {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST},
-  {"SIN", 1}, {"COS", 1}, {"TAN", 1}, {"EXP", 1}, {"SQRT", 1}
+  {"SIN", 1}, {"COS", 1}, {"TAN", 1}, {"EXP", 1}, {"SQRT", 1}, {"LOG", 1}
 };
 
 
@@ -1136,6 +1136,9 @@ int parseFnCallExpr() {
       case TOKEN_SQRT:    // SQRT(number)
         stackPushNum((float)sqrt( stackPopNum()));
         break;
+      case TOKEN_LOG:    // LOG(number)
+        stackPushNum((float)log( stackPopNum()));
+        break;
 
       default:
         return ERROR_UNEXPECTED_TOKEN;
@@ -1287,6 +1290,7 @@ int parsePrimary() {
     case TOKEN_TAN:
     case TOKEN_EXP:
     case TOKEN_SQRT:
+    case TOKEN_LOG:
       return parseFnCallExpr();
 
     default:
