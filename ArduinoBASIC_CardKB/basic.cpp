@@ -155,7 +155,7 @@ const TokenTableEntry PROGMEM tokenTable[] = {
    PROGRAM FUNCTIONS
  * **************************************************************************/
 void printTokens(uint8_t *p) {
-  boolean modeREM = false;
+  bool modeREM = false;
   while (*p != TOKEN_EOL) {
     if (*p == TOKEN_IDENT) {
       p++;

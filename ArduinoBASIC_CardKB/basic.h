@@ -13,8 +13,7 @@
 #define _BASIC_H
 
 //GPIO 1...USE GPIO   0...GPIO NONE
-#define GPIO                    0
-
+#define GPIO                    1
 #include <stdint.h>
 
 #define TOKEN_EOL		            0

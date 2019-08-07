@@ -16,6 +16,7 @@
 
 #include "basic.h"
 #include "host.h"
+#include "cardkb.h"
 
 // Define in host.h if using an external EEPROM e.g. 24LC256
 // Should be connected to the I2C pins
@@ -41,6 +42,7 @@ uint8_t autorun = 0;
 void setup() {
   keybordSetup();
   oled.init();
+  oled.clear();
 
   reset();
   host_init();
