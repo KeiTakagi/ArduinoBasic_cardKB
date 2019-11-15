@@ -243,7 +243,7 @@ char *host_readLine() {
   bool done = false;
   char c;
   while (!done) {
-    while (c = getChar()) {
+    while (c = getChar(200)) {
       host_click();
       // read the next key
       lineDirty[pos / OLED_COLMAX] = 1;
@@ -269,7 +269,7 @@ char *host_readLine() {
           curY = pos / OLED_COLMAX;
         }
       }
-      redraw = 1;
+      host_showBuffer();
     }
     if (redraw)
       host_showBuffer();
@@ -291,14 +291,11 @@ char host_getKey() {
 }
 
 bool host_ESCPressed() {
-
-  while (inkeyChar = getChar()) {
-    // read the next key
-    //        inkeyChar = keyboard.read();
-    if (inkeyChar == 0x1B)//ESC
-      return true;
-  }
-  return false;
+  inkeyChar = getChar(0);
+  if (inkeyChar == 0x1B)//ESC
+    return true;
+  else
+    return false;
 }
 
 void host_outputFreeMem(uint16_t val)

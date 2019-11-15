@@ -15,14 +15,15 @@
 
 #define NUMPIXELS      1
 #define LEDPIN        13
+#define LONGPRESSEDTIME 15
 
 #define Set_Bit(val, bitn)    (val |=(1<<(bitn)))
 #define Clr_Bit(val, bitn)    (val&=~(1<<(bitn)))
 #define Get_Bit(val, bitn)    (val &(1<<(bitn)) )
 
 #define shiftPressed (PINB & 0x10 ) != 0x10
-#define symPressed (PINB & 0x80 ) != 0x80
-#define fnPressed (PINB & 0x40 ) != 0x40
+#define fnPressed    (PINB & 0x40 ) != 0x40
+#define symPressed   (PINB & 0x80 ) != 0x80
 
 //       d0   d1     d2  d3 d4 d5 d6 d7 d8 d9 d10 d11
 //A3：   esc   1      2  3  4  5  6  7  8  9  0   del
@@ -89,7 +90,7 @@ const uint8_t PROGMEM pinBmap[] = {222, 221, 219, 215};
 
 void flashOn(byte r, byte g, byte b);
 void keybordSetup(void);
-byte getInput(void);
-byte getChar(void);
+byte getInput(uint8_t);
+byte getChar(uint8_t);
 
 #endif
