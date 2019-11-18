@@ -159,10 +159,19 @@ void host_outputProgMemString(const char *p) {
 }
 
 void host_outputChar(char c) {
+  host_outputChar(c, false);
+}
+void host_outputChar(char c, bool pause) {
   uint8_t pos = curY * OLED_COLMAX + curX;
   lineDirty[pos / OLED_COLMAX] = 1;
   screenBuffer[pos++] = c;
   if (pos >= OLED_COLMAX * OLED_ROWMAX) {
+    host_showBuffer();
+    if (pause) {
+      while (1) {
+        if (getChar(0) != 0x00)break;
+      }
+    }
     scrollBuffer();
     pos -= OLED_COLMAX;
   }
@@ -223,10 +232,20 @@ void host_outputFloat(float f) {
 }
 
 void host_newLine() {
+  host_newLine(false);
+}
+void host_newLine(bool pause) {
   curX = 0;
   curY++;
-  if (curY == OLED_ROWMAX)
+  if (curY == OLED_ROWMAX) {
+    host_showBuffer();
+    if (pause) {
+      while (1) {
+        if (getChar(0) != 0x00)break;
+      }
+    }
     scrollBuffer();
+  }
   memset(screenBuffer + OLED_COLMAX * (curY), 0x20, OLED_COLMAX);
   lineDirty[curY] = 1;
 }
@@ -300,7 +319,7 @@ bool host_ESCPressed() {
 
 void host_outputFreeMem(uint16_t val)
 {
-  host_newLine();
+  host_newLine(true);
   host_outputInt(val);
   host_outputChar(' ');
   host_outputProgMemString(bytesFreeStr);
@@ -380,11 +399,11 @@ void host_directoryExtEEPROM() {
     while (1) {
       char ch = readExtEEPROM(addr + 2 + i);
       if (!ch) break;
-      host_outputChar(readExtEEPROM(addr + 2 + i));
+      host_outputChar(readExtEEPROM(addr + 2 + i), true);
       i++;
     }
     addr += len;
-    host_outputChar(' ');
+    host_outputChar(' ', true);
   }
   host_outputFreeMem(EXTERNAL_EEPROM_SIZE - addr - 2);
 }
