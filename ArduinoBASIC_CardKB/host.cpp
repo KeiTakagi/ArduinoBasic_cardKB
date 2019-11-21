@@ -141,7 +141,7 @@ void host_outputString(char *str) {
   while (*str) {
     lineDirty[pos / OLED_COLMAX] = 1;
     screenBuffer[pos++] = *str++;
-    if (pos >= OLED_COLMAX * OLED_ROWMAX) {
+    if (pos > OLED_COLMAX * OLED_ROWMAX) {
       scrollBuffer();
       pos -= OLED_COLMAX;
     }
