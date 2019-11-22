@@ -143,10 +143,8 @@ void host_outputString(char *str) {
     if (pos >= OLED_COLMAX * OLED_ROWMAX) {
       scrollBuffer();
       pos -= OLED_COLMAX;
-      screenBuffer[pos] = *str++;
-    } else {
-      screenBuffer[pos++] = *str++;
     }
+    screenBuffer[pos++] = *str++;
   }
   curX = pos % OLED_COLMAX;
   curY = pos / OLED_COLMAX;
