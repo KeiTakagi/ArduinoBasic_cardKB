@@ -140,10 +140,12 @@ void host_outputString(char *str) {
   uint8_t pos = curY * OLED_COLMAX + curX;
   while (*str) {
     lineDirty[pos / OLED_COLMAX] = 1;
-    screenBuffer[pos++] = *str++;
-    if (pos > OLED_COLMAX * OLED_ROWMAX) {
+    if (pos >= OLED_COLMAX * OLED_ROWMAX) {
       scrollBuffer();
       pos -= OLED_COLMAX;
+      screenBuffer[pos] = *str++;
+    } else {
+      screenBuffer[pos++] = *str++;
     }
   }
   curX = pos % OLED_COLMAX;
