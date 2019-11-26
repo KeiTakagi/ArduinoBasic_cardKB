@@ -157,7 +157,7 @@ byte getChar(uint8_t delay_time)
       if ((idle / 6) % 2 == 1) {
         flashOn(0, 0, 0);
       } else {
-        flashOn(5, 0, 0);
+        flashOn(0, 5, 0);
       }
       break;
     case 4://long_sym
