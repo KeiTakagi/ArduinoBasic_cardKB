@@ -1,7 +1,7 @@
 /*
     @file cardkb.cpp
     @brief cardKeyboard
-    
+
     @author Kei Takagi
     @date 2019.11.26
 

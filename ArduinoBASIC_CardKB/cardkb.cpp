@@ -13,7 +13,7 @@
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
-uint16_t idle = 0;
+bool    idle = false;
 uint8_t _shift = 0, _fn = 0, _sym = 0;
 uint8_t KEY = 0, hadPressed = 0;
 uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_shift 5->fn,6->long_fn
@@ -91,7 +91,7 @@ byte getChar(uint8_t delay_time)
       delay(200);
     } else {
       if (_shift < LONGPRESSEDTIME)_shift++;
-      _sym = 0; _fn = 0; idle = 0;
+      _sym = 0; _fn = 0; idle = false;
       return 0;
     }
   }
@@ -110,7 +110,7 @@ byte getChar(uint8_t delay_time)
       delay(200);
     } else {
       if (_sym < LONGPRESSEDTIME)_sym++;
-      _shift = 0; _fn = 0; idle = 0;
+      _shift = 0; _fn = 0; idle = false;
       return 0;
     }
   }
@@ -129,7 +129,7 @@ byte getChar(uint8_t delay_time)
       delay(200);
     } else {
       if (_fn < LONGPRESSEDTIME)_fn++;
-      _shift = 0; _sym = 0; idle = 0;
+      _shift = 0; _sym = 0; idle = false;
       return 0;
     }
   }
@@ -140,12 +140,12 @@ byte getChar(uint8_t delay_time)
     // fn
     Mode = 5;
   }
-
+  
   switch (Mode) {
     case 0://normal
       flashOn(0, 0, 0); break;
     case 1://shift
-      if ((idle / 6) % 2 == 1) {
+      if (idle) {
         flashOn(0, 0, 0);
       } else {
         flashOn(5, 0, 0);
@@ -154,7 +154,7 @@ byte getChar(uint8_t delay_time)
     case 2://long_shift
       flashOn(5, 0, 0); break;
     case 3://sym
-      if ((idle / 6) % 2 == 1) {
+      if (idle) {
         flashOn(0, 0, 0);
       } else {
         flashOn(0, 5, 0);
@@ -163,7 +163,7 @@ byte getChar(uint8_t delay_time)
     case 4://long_sym
       flashOn(0, 5, 0); break;
     case 5://fn
-      if ((idle / 6) % 2 == 1) {
+      if (idle) {
         flashOn(0, 0, 0);
       } else {
         flashOn(0, 0, 5);
@@ -178,7 +178,7 @@ byte getChar(uint8_t delay_time)
     if (hadPressed == 1) {
       c = pgm_read_byte(&KeyMap[KEY - 1][Mode]);
       if ((Mode == 1) || (Mode == 3) || (Mode == 5)) {
-        Mode = 0;
+        Mode = false;
         _shift = 0;
         _sym = 0;
         _fn = 0;
@@ -186,6 +186,6 @@ byte getChar(uint8_t delay_time)
       hadPressed = 0;
     }
   }
-  idle++;
+  idle=!idle;
   return c;
 }

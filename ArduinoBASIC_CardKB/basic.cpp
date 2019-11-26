@@ -983,8 +983,7 @@ int parsePrimary();
 int expectNumber();
 
 // parse a number
-int parseNumberExpr()
-{
+int parseNumberExpr(){
   if (executeMode && !stackPushNum(numVal))
     return ERROR_OUT_OF_MEMORY;
   getNextToken(); // consume the number

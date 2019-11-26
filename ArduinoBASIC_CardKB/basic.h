@@ -93,7 +93,7 @@
 #define FIRST_NON_ALPHA_TOKEN   8
 #define LAST_NON_ALPHA_TOKEN    22
 
-#define ERROR_NONE				      0
+#define ERROR_NONE				                      0
 // parse errors
 #define ERROR_LEXER_BAD_NUM			                1
 #define ERROR_LEXER_TOO_LONG			              2
@@ -151,7 +151,6 @@ typedef struct {
 }
 TokenTableEntry;
 
-//extern const char *errorTable[];
 extern const char* const errorTable[];
 
 void reset();
