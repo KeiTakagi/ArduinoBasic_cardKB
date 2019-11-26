@@ -390,10 +390,10 @@ void stackMidStr(int start, int len) {
 // +--------+-------+-----------------+----------+-------+ . . .+-------+-------------+. .
 
 // variable type byte
-#define VAR_TYPE_NUM		0x1
-#define VAR_TYPE_FORNEXT	0x2
+#define VAR_TYPE_NUM		    0x1
+#define VAR_TYPE_FORNEXT	  0x2
 #define VAR_TYPE_NUM_ARRAY	0x4
-#define VAR_TYPE_STRING		0x8
+#define VAR_TYPE_STRING		  0x8
 #define VAR_TYPE_STR_ARRAY	0x10
 
 uint8_t *findVariable(char *searchName, int searchMask) {
@@ -970,7 +970,7 @@ int getNextToken()
 
 // value (int) returned from parseXXXXX
 #define ERROR_MASK						0x0FFF
-#define TYPE_MASK						0xF000
+#define TYPE_MASK						  0xF000
 #define TYPE_NUMBER						0x0000
 #define TYPE_STRING						0x1000
 
