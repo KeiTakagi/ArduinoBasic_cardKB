@@ -4,12 +4,11 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.15
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
 
-#include <Adafruit_NeoPixel.h>
 #include <SSD1306ASCII_I2C.h>
 #include <EEPROM.h>
 #include "host.h"
@@ -20,11 +19,10 @@ extern SSD1306ASCII oled;
 extern EEPROMClass EEPROM;
 int timer1_counter;
 
-
 byte screenBuffer[OLED_COLMAX * OLED_ROWMAX];
 byte lineDirty[OLED_ROWMAX];
 uint8_t curX = 0, curY = 0;
-volatile char flash = 0, redraw = 0;
+volatile boolean flash = false;
 byte inputMode = 0;
 byte inkeyChar = 0;
 
@@ -42,11 +40,9 @@ void initTimer() {
   interrupts();             // enable all interrupts
 }
 
-ISR(TIMER1_OVF_vect)        // interrupt service routine
-{
+ISR(TIMER1_OVF_vect) {      // interrupt service routine
   TCNT1 = timer1_counter;   // preload timer
   flash = !flash;
-  redraw = 1;
 }
 
 void host_init() {
@@ -93,8 +89,9 @@ void host_cls() {
 
 void host_startupTone() {
 #if BUZZER
-  for (uint8_t i = 1; i <= 2; i++) {
-    for (uint8_t j = 0; j < 50 * i; j++) {
+  uint8_t i, j;
+  for (i = 1; i <= 2; i++) {
+    for (j = 0; j < 50 * i; j++) {
       digitalWrite(BUZZER, HIGH);
       delay(3 - i);
       digitalWrite(BUZZER, LOW);
@@ -120,8 +117,8 @@ void host_showBuffer() {
       oled.setCursor(0, y);
       for (uint8_t x = 0; x < OLED_COLMAX; x++) {
         char c = screenBuffer[y * OLED_COLMAX + x];
-        if (c < 32) c = ' ';
-        if (x == curX && y == curY && inputMode && flash) c = 127;
+        if (c < 0x20) c = ' ';
+        if (x == curX && y == curY && inputMode && flash) c = 0x7f;
         oled.print(c);
       }
       lineDirty[y] = 0;
@@ -190,10 +187,9 @@ int host_outputInt(long num) {
   }
   while (i);
 
-  for (int i = 0; i < c; i++) {
+  for ( i = 0; i < c; i++) {
     xx /= 10;
-    char digit = ((num / xx) % 10) + '0';
-    host_outputChar(digit);
+    host_outputChar(((num / xx) % 10) + '0');
   }
   return c;
 }
@@ -266,7 +262,7 @@ char *host_readLine() {
       host_click();
       // read the next key
       lineDirty[pos / OLED_COLMAX] = 1;
-      if (c >= 32 && c <= 126)
+      if ( 0x20 <= c && c < 0x7f)
         screenBuffer[pos++] = c;
       else if (c == 0x08 && pos > startPos) //DELETE
         screenBuffer[--pos] = 0;
@@ -290,8 +286,7 @@ char *host_readLine() {
       }
       host_showBuffer();
     }
-    if (redraw)
-      host_showBuffer();
+    host_showBuffer();  //Cursor blinks
   }
   screenBuffer[pos] = 0;
   inputMode = 0;
@@ -304,7 +299,7 @@ char *host_readLine() {
 char host_getKey() {
   char c = inkeyChar;
   inkeyChar = 0;
-  if (c >= 32 && c <= 126)
+  if (0x20 <= c && c < 0x7f)
     return c;
   else return 0;
 }
@@ -345,10 +340,8 @@ void host_loadProgram() {
 #if EXTERNAL_EEPROM
 #include <Wire.h>
 
-void writeExtEEPROM(uint16_t address, uint8_t data)
-{
-  //  if (address % 32 == 0) host_click();
-  uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
+void writeExtEEPROM(uint16_t address, uint8_t data) {
+  uint8_t i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
   Wire.beginTransmission(i2caddr);
   Wire.write((byte)(address >> 8));   // MSB
   Wire.write((byte)(address & 0xFF)); // LSB
@@ -359,7 +352,7 @@ void writeExtEEPROM(uint16_t address, uint8_t data)
 
 byte readExtEEPROM(uint16_t address)
 {
-  uint8_t   i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
+  uint8_t i2caddr = (uint8_t)EXTERNAL_EEPROM_ADDR | (uint8_t)(address >> 16);
   Wire.beginTransmission(i2caddr);
   Wire.write((byte)(address >> 8));   // MSB
   Wire.write((byte)(address & 0xFF)); // LSB
@@ -437,6 +430,7 @@ bool host_loadExtEEPROM(char *fileName) {
 }
 
 bool host_saveExtEEPROM(char *fileName) {
+  uint16_t i;
   uint16_t addr = getExtEEPROMAddr(fileName);
   if (addr != EXTERNAL_EEPROM_SIZE)
     host_removeExtEEPROM(fileName);
@@ -451,14 +445,14 @@ bool host_saveExtEEPROM(char *fileName) {
   writeExtEEPROM(addr++, (len >> 8) & 0xFF);
 
   // write filename
-  for (uint8_t i = 0; i < strlen(fileName); i++)
+  for ( i = 0; i < strlen(fileName); i++)
     writeExtEEPROM(addr++, fileName[i]);
   writeExtEEPROM(addr++, 0);
 
   // write length & program
   writeExtEEPROM(addr++, sysPROGEND & 0xFF);
   writeExtEEPROM(addr++, (sysPROGEND >> 8) & 0xFF);
-  for (uint16_t i = 0; i < sysPROGEND; i++)
+  for ( i = 0; i < sysPROGEND; i++)
     writeExtEEPROM(addr++, mem[i]);
 
   // 0 length marks end

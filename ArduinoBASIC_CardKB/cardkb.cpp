@@ -3,7 +3,7 @@
     @brief cardKeyboard
 
     @author Kei Takagi
-    @date 2019.8.8
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -23,6 +23,7 @@ void flashOn(byte r, byte g, byte b) {
 }
 
 void keybordSetup(void) {
+  uint8_t i, j;
   pinMode(A3, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
@@ -34,12 +35,12 @@ void keybordSetup(void) {
   PORTD = 0xff;
 
   pixels.begin();
-  for (byte j = 0; j < 3; j++) {
-    for (byte i = 0; i < 5; i++) {
+  for ( j = 0; j < 3; j++) {
+    for ( i = 0; i < 5; i++) {
       flashOn(i, i, i);
       delay(10);
     }
-    for (byte i = 5; i > 0; i--) {
+    for ( i = 5; i > 0; i--) {
       flashOn(i, i, i);
       delay(10);
     }

@@ -3,15 +3,12 @@
     @brief cardKeyboard
     
     @author Kei Takagi
-    @date 2019.8.8
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
 #ifndef _CARDKB_H
 #define _CARDKB_H
-
-//#include <stdint.h>
-#include <Adafruit_NeoPixel.h>
 
 #define NUMPIXELS      1
 #define LEDPIN        13

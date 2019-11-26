@@ -45,7 +45,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.6
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -424,7 +424,7 @@ void deleteVariableAt(uint8_t *pos) {
 
 int storeNumVariable(char *name, float val) {
   // these can be modified in place
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p != NULL)
   { // replace the old value
@@ -455,7 +455,7 @@ int storeNumVariable(char *name, float val) {
 }
 
 int storeForNextVariable(char *name, float start, float step, float end, uint16_t lineNum, uint16_t stmtNum) {
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   int bytesNeeded = 3;	// len + flags
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += 3 * sizeof(float);	// vals
@@ -495,8 +495,8 @@ int storeForNextVariable(char *name, float start, float step, float end, uint16_
 }
 
 int storeStrVariable(char *name, char *val) {
-  int nameLen = strlen(name);
-  int valLen = strlen(val);
+  uint8_t nameLen = strlen(name);
+  uint8_t valLen = strlen(val);
   int bytesNeeded = 3;	// len + type
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += valLen + 1;	// val
@@ -527,7 +527,7 @@ int storeStrVariable(char *name, char *val) {
 
 int createArray(char *name, int isString) {
   // dimensions and number of dimensions on the calculator stack
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   int bytesNeeded = 3;	// len + flags
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += 2;		// num dims

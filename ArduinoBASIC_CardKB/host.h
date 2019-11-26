@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.15
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -26,8 +26,8 @@
 void host_init(void);
 void host_sleep(long ms);
 void host_digitalWrite(int pin, int state);
-int host_digitalRead(int pin);
-int host_analogRead(int pin);
+int  host_digitalRead(int pin);
+int  host_analogRead(int pin);
 void host_pinMode(int pin, int mode);
 void host_click();
 void host_startupTone();
@@ -40,7 +40,7 @@ void host_outputChar(char c);
 void host_outputChar(char c,bool pause);
 void host_outputFloat(float f);
 char *host_floatToStr(float f, char *buf);
-int host_outputInt(long val);
+int  host_outputInt(long val);
 void host_newLine();
 void host_newLine(bool pause);
 char *host_readLine();
@@ -49,7 +49,6 @@ bool host_ESCPressed();
 void host_outputFreeMem(unsigned int val);
 void host_saveProgram(bool autoexec);
 void host_loadProgram();
-
 
 #if EXTERNAL_EEPROM
 void writeExtEEPROM(uint16_t address, uint8_t data);
