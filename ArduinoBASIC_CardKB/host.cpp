@@ -112,13 +112,14 @@ void host_moveCursor(uint8_t x, uint8_t y) {
 }
 
 void host_showBuffer() {
-  for (uint8_t y = 0; y < OLED_ROWMAX; y++) {
+  uint8_t x, y;
+  for ( y = 0; y < OLED_ROWMAX; y++) {
     if (lineDirty[y] || (inputMode && y == curY)) {
       oled.setCursor(0, y);
-      for (uint8_t x = 0; x < OLED_COLMAX; x++) {
+      for ( x = 0; x < OLED_COLMAX; x++) {
         char c = screenBuffer[y * OLED_COLMAX + x];
         if (c < 0x20) c = ' ';
-        if (x == curX && y == curY && inputMode && flash) c = 0x7f;
+        if (x == curX && y == curY && inputMode && flash) c = 0x7f; //Cursor blink
         oled.print(c);
       }
       lineDirty[y] = 0;
@@ -286,7 +287,7 @@ char *host_readLine() {
       }
       host_showBuffer();
     }
-    host_showBuffer();  //Cursor blinks
+    host_showBuffer();  //Cursor blink
   }
   screenBuffer[pos] = 0;
   inputMode = 0;
