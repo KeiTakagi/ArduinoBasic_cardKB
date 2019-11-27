@@ -336,6 +336,14 @@ void host_loadProgram() {
     mem[i] = EEPROM.read(i + 3);
 }
 
+void host_LED(uint8_t r,uint8_t g,uint8_t b){
+  flashOn(r,g,b);
+}
+void host_Img(uint8_t x,uint8_t y,uint8_t *imgBuff){
+  oled.setCursor(x,y);
+  oled.setimg(imgBuff);
+}
+
 //-----------------------------------------------------------------------------
 
 #if EXTERNAL_EEPROM

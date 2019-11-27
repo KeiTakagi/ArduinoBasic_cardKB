@@ -983,7 +983,7 @@ int parsePrimary();
 int expectNumber();
 
 // parse a number
-int parseNumberExpr(){
+int parseNumberExpr() {
   if (executeMode && !stackPushNum(numVal))
     return ERROR_OUT_OF_MEMORY;
   getNextToken(); // consume the number
@@ -1417,7 +1417,7 @@ int parseBinOpRHS(int ExprPrec, int lhsVal) {
   }
 }
 
-int parseExpression(){
+int parseExpression() {
   int val = parsePrimary();
   if (val & ERROR_MASK) return val;
   return parseBinOpRHS(0, val);
@@ -1831,6 +1831,7 @@ int parse_DIM() {
     return ERROR_OUT_OF_MEMORY;
   return 0;
 }
+
 
 static int targetStmtNumber;
 int parseStmts()
