@@ -1513,7 +1513,7 @@ int parse_PRINT() {
         host_outputFloat(stackPopNum());
       else
         host_outputString(stackPopStr());
-      newLine = 1;
+      newLine = true;
     }
     if (curToken == TOKEN_SEMICOLON) {
       newLine = false;
