@@ -45,7 +45,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.7.6
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -390,10 +390,10 @@ void stackMidStr(int start, int len) {
 // +--------+-------+-----------------+----------+-------+ . . .+-------+-------------+. .
 
 // variable type byte
-#define VAR_TYPE_NUM		0x1
-#define VAR_TYPE_FORNEXT	0x2
+#define VAR_TYPE_NUM		    0x1
+#define VAR_TYPE_FORNEXT	  0x2
 #define VAR_TYPE_NUM_ARRAY	0x4
-#define VAR_TYPE_STRING		0x8
+#define VAR_TYPE_STRING		  0x8
 #define VAR_TYPE_STR_ARRAY	0x10
 
 uint8_t *findVariable(char *searchName, int searchMask) {
@@ -424,7 +424,7 @@ void deleteVariableAt(uint8_t *pos) {
 
 int storeNumVariable(char *name, float val) {
   // these can be modified in place
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   uint8_t *p = findVariable(name, VAR_TYPE_NUM | VAR_TYPE_FORNEXT);
   if (p != NULL)
   { // replace the old value
@@ -455,7 +455,7 @@ int storeNumVariable(char *name, float val) {
 }
 
 int storeForNextVariable(char *name, float start, float step, float end, uint16_t lineNum, uint16_t stmtNum) {
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   int bytesNeeded = 3;	// len + flags
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += 3 * sizeof(float);	// vals
@@ -495,8 +495,8 @@ int storeForNextVariable(char *name, float start, float step, float end, uint16_
 }
 
 int storeStrVariable(char *name, char *val) {
-  int nameLen = strlen(name);
-  int valLen = strlen(val);
+  uint8_t nameLen = strlen(name);
+  uint8_t valLen = strlen(val);
   int bytesNeeded = 3;	// len + type
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += valLen + 1;	// val
@@ -527,7 +527,7 @@ int storeStrVariable(char *name, char *val) {
 
 int createArray(char *name, int isString) {
   // dimensions and number of dimensions on the calculator stack
-  int nameLen = strlen(name);
+  uint8_t nameLen = strlen(name);
   int bytesNeeded = 3;	// len + flags
   bytesNeeded += nameLen + 1;	// name
   bytesNeeded += 2;		// num dims
@@ -924,7 +924,7 @@ int tokenize(uint8_t *input, uint8_t *output, int outputSize)
    PARSER / INTERPRETER
  * **************************************************************************/
 
-static char executeMode;	// 0 = syntax check only, 1 = execute
+static bool executeMode;	// false = syntax check only, true = execute
 uint16_t lineNumber, stmtNumber;
 // stmt number is 0 for the first statement, then increases after each command seperator (:)
 // Note that IF a=1 THEN PRINT "x": print "y" is considered to be only 2 statements
@@ -970,7 +970,7 @@ int getNextToken()
 
 // value (int) returned from parseXXXXX
 #define ERROR_MASK						0x0FFF
-#define TYPE_MASK						0xF000
+#define TYPE_MASK						  0xF000
 #define TYPE_NUMBER						0x0000
 #define TYPE_STRING						0x1000
 
@@ -983,8 +983,7 @@ int parsePrimary();
 int expectNumber();
 
 // parse a number
-int parseNumberExpr()
-{
+int parseNumberExpr() {
   if (executeMode && !stackPushNum(numVal))
     return ERROR_OUT_OF_MEMORY;
   getNextToken(); // consume the number
@@ -1418,8 +1417,7 @@ int parseBinOpRHS(int ExprPrec, int lhsVal) {
   }
 }
 
-int parseExpression()
-{
+int parseExpression() {
   int val = parsePrimary();
   if (val & ERROR_MASK) return val;
   return parseBinOpRHS(0, val);
@@ -1506,7 +1504,7 @@ int parse_LIST() {
 int parse_PRINT() {
   getNextToken();
   // zero + expressions seperated by semicolons
-  int newLine = 1;
+  bool newLine = true;
   while (curToken != TOKEN_EOL && curToken != TOKEN_CMD_SEP) {
     int val = parseExpression();
     if (val & ERROR_MASK) return val;
@@ -1515,10 +1513,10 @@ int parse_PRINT() {
         host_outputFloat(stackPopNum());
       else
         host_outputString(stackPopStr());
-      newLine = 1;
+      newLine = true;
     }
     if (curToken == TOKEN_SEMICOLON) {
-      newLine = 0;
+      newLine = false;
       getNextToken();
     }
   }
@@ -1834,6 +1832,7 @@ int parse_DIM() {
   return 0;
 }
 
+
 static int targetStmtNumber;
 int parseStmts()
 {
@@ -1933,7 +1932,7 @@ int processInput(uint8_t *tokenBuf) {
       return ERROR_LINE_NUM_TOO_BIG;
   }
 
-  executeMode = 0;
+  executeMode = false;
   targetStmtNumber = 0;
   int ret = parseStmts();	// syntax check
   if (ret != ERROR_NONE)
@@ -1946,7 +1945,7 @@ int processInput(uint8_t *tokenBuf) {
   else {
     // we start off executing from the input buffer
     tokenBuffer = tokenBuf;
-    executeMode = 1;
+    executeMode = true;
     lineNumber = 0;	// buffer
     uint8_t *p;
 
@@ -1956,9 +1955,9 @@ int processInput(uint8_t *tokenBuf) {
       stmtNumber = 0;
       // skip any statements? (e.g. for/next)
       if (targetStmtNumber) {
-        executeMode = 0;
+        executeMode = false;
         parseStmts();
-        executeMode = 1;
+        executeMode = true;
         targetStmtNumber = 0;
       }
       // now execute

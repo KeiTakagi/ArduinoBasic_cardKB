@@ -3,7 +3,7 @@
     @brief cardKeyboard
 
     @author Kei Takagi
-    @date 2019.8.8
+    @date 2019.11.26
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -13,7 +13,7 @@
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
-uint16_t idle = 0;
+uint8_t idle = 0;
 uint8_t _shift = 0, _fn = 0, _sym = 0;
 uint8_t KEY = 0, hadPressed = 0;
 uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_shift 5->fn,6->long_fn
@@ -23,6 +23,7 @@ void flashOn(byte r, byte g, byte b) {
 }
 
 void keybordSetup(void) {
+  uint8_t i, j;
   pinMode(A3, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
@@ -34,12 +35,12 @@ void keybordSetup(void) {
   PORTD = 0xff;
 
   pixels.begin();
-  for (byte j = 0; j < 3; j++) {
-    for (byte i = 0; i < 5; i++) {
+  for ( j = 0; j < 3; j++) {
+    for ( i = 0; i < 5; i++) {
       flashOn(i, i, i);
       delay(10);
     }
-    for (byte i = 5; i > 0; i--) {
+    for ( i = 5; i > 0; i--) {
       flashOn(i, i, i);
       delay(10);
     }
@@ -144,32 +145,32 @@ byte getChar(uint8_t delay_time)
     case 0://normal
       flashOn(0, 0, 0); break;
     case 1://shift
-      if ((idle / 6) % 2 == 1) {
+      if (idle < 4) {
         flashOn(0, 0, 0);
       } else {
-        flashOn(5, 0, 0);
+        flashOn(4, 0, 0);
       }
       break;
     case 2://long_shift
-      flashOn(5, 0, 0); break;
+      flashOn(4, 0, 0); break;
     case 3://sym
-      if ((idle / 6) % 2 == 1) {
+      if (idle < 4) {
         flashOn(0, 0, 0);
       } else {
-        flashOn(5, 0, 0);
+        flashOn(0, 4, 0);
       }
       break;
     case 4://long_sym
-      flashOn(0, 5, 0); break;
+      flashOn(0, 4, 0); break;
     case 5://fn
-      if ((idle / 6) % 2 == 1) {
+      if (idle < 4) {
         flashOn(0, 0, 0);
       } else {
-        flashOn(0, 0, 5);
+        flashOn(0, 0, 4);
       }
       break;
     case 6://long_fn
-      flashOn(0, 0, 5); break;
+      flashOn(0, 0, 4); break;
   }
 
   if (hadPressed == 0) {
@@ -177,7 +178,7 @@ byte getChar(uint8_t delay_time)
     if (hadPressed == 1) {
       c = pgm_read_byte(&KeyMap[KEY - 1][Mode]);
       if ((Mode == 1) || (Mode == 3) || (Mode == 5)) {
-        Mode = 0;
+        Mode = false;
         _shift = 0;
         _sym = 0;
         _fn = 0;
@@ -185,6 +186,6 @@ byte getChar(uint8_t delay_time)
       hadPressed = 0;
     }
   }
-  idle++;
+  idle < 8 ?  idle++ : idle = 0;
   return c;
 }
