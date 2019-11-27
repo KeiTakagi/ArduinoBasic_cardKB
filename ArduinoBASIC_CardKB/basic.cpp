@@ -924,7 +924,7 @@ int tokenize(uint8_t *input, uint8_t *output, int outputSize)
    PARSER / INTERPRETER
  * **************************************************************************/
 
-static char executeMode;	// 0 = syntax check only, 1 = execute
+static bool executeMode;	// false = syntax check only, true = execute
 uint16_t lineNumber, stmtNumber;
 // stmt number is 0 for the first statement, then increases after each command seperator (:)
 // Note that IF a=1 THEN PRINT "x": print "y" is considered to be only 2 statements
@@ -1417,8 +1417,7 @@ int parseBinOpRHS(int ExprPrec, int lhsVal) {
   }
 }
 
-int parseExpression()
-{
+int parseExpression(){
   int val = parsePrimary();
   if (val & ERROR_MASK) return val;
   return parseBinOpRHS(0, val);
@@ -1505,7 +1504,7 @@ int parse_LIST() {
 int parse_PRINT() {
   getNextToken();
   // zero + expressions seperated by semicolons
-  int newLine = 1;
+  bool newLine = true;
   while (curToken != TOKEN_EOL && curToken != TOKEN_CMD_SEP) {
     int val = parseExpression();
     if (val & ERROR_MASK) return val;
@@ -1517,7 +1516,7 @@ int parse_PRINT() {
       newLine = 1;
     }
     if (curToken == TOKEN_SEMICOLON) {
-      newLine = 0;
+      newLine = false;
       getNextToken();
     }
   }
@@ -1932,7 +1931,7 @@ int processInput(uint8_t *tokenBuf) {
       return ERROR_LINE_NUM_TOO_BIG;
   }
 
-  executeMode = 0;
+  executeMode = false;
   targetStmtNumber = 0;
   int ret = parseStmts();	// syntax check
   if (ret != ERROR_NONE)
@@ -1945,7 +1944,7 @@ int processInput(uint8_t *tokenBuf) {
   else {
     // we start off executing from the input buffer
     tokenBuffer = tokenBuf;
-    executeMode = 1;
+    executeMode = true;
     lineNumber = 0;	// buffer
     uint8_t *p;
 
@@ -1955,9 +1954,9 @@ int processInput(uint8_t *tokenBuf) {
       stmtNumber = 0;
       // skip any statements? (e.g. for/next)
       if (targetStmtNumber) {
-        executeMode = 0;
+        executeMode = false;
         parseStmts();
-        executeMode = 1;
+        executeMode = true;
         targetStmtNumber = 0;
       }
       // now execute
