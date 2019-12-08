@@ -3,7 +3,7 @@
     @brief cardKeyboard
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2019.12.07
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -16,7 +16,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KH
 uint8_t idle = 0;
 uint8_t _shift = 0, _fn = 0, _sym = 0;
 uint8_t KEY = 0, hadPressed = 0;
-uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_shift 5->fn,6->long_fn
+uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_sym 5->fn,6->long_fn
 
 void flashOn(byte r, byte g, byte b) {
   pixels.setPixelColor(0, pixels.Color(r, g, b)); pixels.show();
@@ -57,7 +57,6 @@ byte getInput(uint8_t delay_time) {
     digitalWrite(A2, (0b00001101 >> i) & 0b00000001);
     digitalWrite(A1, (0b00001011 >> i) & 0b00000001);
     digitalWrite(A0, (0b00000111 >> i) & 0b00000001);
-    delay(2);
     for (j = 0; j < 8; j++) {
       ret++;
       if (PIND == pgm_read_byte(&pinDmap[j])) {
@@ -178,7 +177,7 @@ byte getChar(uint8_t delay_time)
     if (hadPressed == 1) {
       c = pgm_read_byte(&KeyMap[KEY - 1][Mode]);
       if ((Mode == 1) || (Mode == 3) || (Mode == 5)) {
-        Mode = false;
+        Mode = 0;
         _shift = 0;
         _sym = 0;
         _fn = 0;

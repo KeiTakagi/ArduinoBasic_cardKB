@@ -1,29 +1,25 @@
 /*
-    @file cardkb.cpp
+    @file cardkb.h
     @brief cardKeyboard
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2019.12.07
 
     Copyright (c) 2019 Kei Takagi
 */
 #ifndef _CARDKB_H
 #define _CARDKB_H
 
-#define NUMPIXELS      1
-#define LEDPIN        13
+#define NUMPIXELS        1
+#define LEDPIN          13
 #define LONGPRESSEDTIME 15
 
-#define Set_Bit(val, bitn)    (val |=(1<<(bitn)))
-#define Clr_Bit(val, bitn)    (val&=~(1<<(bitn)))
-#define Get_Bit(val, bitn)    (val &(1<<(bitn)) )
-
-#define shiftPressed (PINB & 0x10 ) != 0x10
-#define fnPressed    (PINB & 0x40 ) != 0x40
-#define symPressed   (PINB & 0x80 ) != 0x80
+#define shiftPressed (PINB & 0x10 ) == 0x00
+#define fnPressed    (PINB & 0x40 ) == 0x00
+#define symPressed   (PINB & 0x80 ) == 0x00
 
 //       d0   d1     d2  d3 d4 d5 d6 d7 d8 d9 d10 d11
-//A3：   esc   1      2  3  4  5  6  7  8  9  0   del
+//A3:    esc   1      2  3  4  5  6  7  8  9  0   del
 //A2:    tab   q      w  e  r  t  y  u  i  o  p
 //A1:   left   up     a  s  d  f  g  h  j  k  l   enter
 //A0:   down   right  z  x  c  v  b  n  m  ,  .   space
@@ -51,14 +47,14 @@ const uint8_t PROGMEM KeyMap[48][7] =
   { 'e', 'E', 'E', '[', '[', 143, 143},//e
   { 'r', 'R', 'R', ']', ']', 144, 144},//r
   { 't', 'T', 'T', '/', '/', 145, 145},//t
-  { 'y', 'Y', 'Y', '\\', '\\', 146, 146}, //y
+  { 'y', 'Y', 'Y', '\\', '\\',146,146},//y
   { 'u', 'U', 'U', '|', '|', 147, 147},//u
   { 'i', 'I', 'I', '~', '~', 148, 148},//i
-  { 'o', 'O', 'O', '\'', '\'', 149, 149}, //o
+  { 'o', 'O', 'O', '\'', '\'',149,149},//o
   { 'p', 'P', 'P', '"', '"', 150, 150},//p
-  {  0 ,  0 ,  0 ,  0 ,  0 , 0, 0},    //  no key
-  {  180,  180,  180,  180,  180, 152, 152},//LEFT
-  {  181,  181,  181,  181,  181, 153, 153},//UP
+  {  0 ,  0 ,  0 ,  0 ,  0 ,   0,   0},//no key
+  { 180, 180, 180, 180, 180, 152, 152},//LEFT
+  { 181, 181, 181, 181, 181, 153, 153},//UP
   { 'a', 'A', 'A', ';', ';', 154, 154},//a
   { 's', 'S', 'S', ':', ':', 155, 155},//s
   { 'd', 'D', 'D', '`', '`', 156, 156},//d
@@ -69,8 +65,8 @@ const uint8_t PROGMEM KeyMap[48][7] =
   { 'k', 'K', 'K', '?', '?', 161, 161},//k
   { 'l', 'L', 'L',   0,   0, 162, 162},//l
   { 13 , 13 ,  13,  13,  13, 163, 163},//enter
-  {  182, 182 ,  182,  182,  182, 164, 164},//DOWN
-  {  183, 183 ,  183,  183,  183, 165, 165},//RIGHT
+  { 182, 182, 182, 182, 182, 164, 164},//DOWN
+  { 183, 183, 183, 183, 183, 165, 165},//RIGHT
   { 'z', 'Z', 'Z',  0 ,  0 , 166, 166},//z
   { 'x', 'X', 'X',  0 ,  0 , 167, 167},//x
   { 'c', 'C', 'C',  0 ,  0 , 168, 168},//c
@@ -82,8 +78,24 @@ const uint8_t PROGMEM KeyMap[48][7] =
   { '.', '.', '.', '<', '>', 174, 174},//.
   { ' ', ' ', ' ', ' ', ' ', 175, 175} //space
 };
-const uint8_t PROGMEM pinDmap[] = {254, 253, 251, 247, 239, 223, 191, 127};
-const uint8_t PROGMEM pinBmap[] = {222, 221, 219, 215};
+//Port D (Pin 0-7) 7 6 5 4 3 2 1 0
+const uint8_t PROGMEM pinDmap[] = {
+  0b11111110,
+  0b11111101,
+  0b11111011,
+  0b11110111,
+  0b11101111,
+  0b11011111,
+  0b10111111,
+  0b01111111
+};
+//Port B (Pin 8-13) - - 13 12 11 10 9 8
+const uint8_t PROGMEM pinBmap[] = {
+  0b11011110,
+  0b11011101,
+  0b11011011,
+  0b11010111
+};
 
 void flashOn(byte r, byte g, byte b);
 void keybordSetup(void);
