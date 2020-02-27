@@ -5,7 +5,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2020.02.27
 
     Copyright (c) 2019 Kei Takagi
 
@@ -144,12 +144,13 @@ void SSD1306ASCII::setimg(const uint8_t* c) {
 //------------------------------------------------------------------------------
 size_t SSD1306ASCII::write(const uint8_t c) {
   uint8_t i;
+  uint8_t buf[6];
   if ( c < 0x20 || 0x7F < c)return 0;
   if (col_ >= OLED_COLMAX) return 0;
   setCursor(col_, row_);
   for (i = 0; i < 5; i++)
     buf[i] = pgm_read_byte(&font[(c - 0x20) * 5 + i]);
-  buf[5] = 0x00;
+  buf[i] = 0x00;
   setimg(buf);
   Wire.endTransmission();
   col_++;
@@ -157,8 +158,7 @@ size_t SSD1306ASCII::write(const uint8_t c) {
 }
 //------------------------------------------------------------------------------
 size_t SSD1306ASCII::write(const char* s) {
-  size_t i;
-  for (i = 0; i < strlen(s); i++)
-    write(s[i]);
+  size_t i=0;
+  while(s[i])write(s[i++]);
   return i;
 }

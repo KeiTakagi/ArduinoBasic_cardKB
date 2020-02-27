@@ -42,10 +42,10 @@ class SSD1306ASCII : public Print {
   uint8_t col() {return col_;}
   uint8_t row() {return row_;}
   void setCursor(uint8_t col, uint8_t row);
+  void setimg(const uint8_t* c);
   void commandList(const uint8_t *c, uint8_t n);
   size_t write(uint8_t c);
   size_t write(const char* s);
-
  private:
   // cursor position
   int8_t col_, row_;
