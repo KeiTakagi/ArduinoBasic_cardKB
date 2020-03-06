@@ -3,15 +3,16 @@
     @brief cardKeyboard
 
     @author Kei Takagi
-    @date 2019.12.07
+    @date 2020.03.06
 
     Copyright (c) 2019 Kei Takagi
 */
 
-#include <Adafruit_NeoPixel.h>
+#include <WS2812.h>
 #include "cardkb.h"
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
+WS2812  LED(NUMPIXELS); 
+cRGB    cRGBvalue;
 
 uint8_t idle = 0;
 uint8_t _shift = 0, _fn = 0, _sym = 0;
@@ -19,7 +20,12 @@ uint8_t KEY = 0, hadPressed = 0;
 uint8_t Mode = 0; //0->normal.1->shift 2->long_shift, 3->sym, 4->long_sym 5->fn,6->long_fn
 
 void flashOn(byte r, byte g, byte b) {
-  pixels.setPixelColor(0, pixels.Color(r, g, b)); pixels.show();
+  cRGBvalue.r = r;
+  cRGBvalue.g = g;
+  cRGBvalue.b = b;
+  LED.set_crgb_at(0, cRGBvalue);
+  // Sends the data to the LEDs
+  LED.sync();
 }
 
 void keybordSetup(void) {
@@ -34,7 +40,7 @@ void keybordSetup(void) {
   DDRD = 0x00;
   PORTD = 0xff;
 
-  pixels.begin();
+  LED.setOutput(LEDPIN);
   for ( j = 0; j < 3; j++) {
     for ( i = 0; i < 5; i++) {
       flashOn(i, i, i);

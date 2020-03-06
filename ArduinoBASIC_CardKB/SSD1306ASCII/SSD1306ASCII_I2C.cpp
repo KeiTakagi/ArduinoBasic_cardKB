@@ -5,7 +5,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2020.02.27
+    @date 2020.03.06
 
     Copyright (c) 2019 Kei Takagi
 
@@ -131,8 +131,9 @@ void SSD1306ASCII::setCursor(uint8_t col, uint8_t row) {
   Wire.endTransmission();
 }
 //------------------------------------------------------------------------------
-void SSD1306ASCII::setimg(const uint8_t* c) {
+void SSD1306ASCII::setImg(const uint8_t* c) {
   uint8_t i;
+  setCursor(col_, row_);
   for (i = 0; i < 6; i++) {
     Wire.endTransmission();
     Wire.beginTransmission(OLED_ADDR);
@@ -147,12 +148,10 @@ size_t SSD1306ASCII::write(const uint8_t c) {
   uint8_t buf[6];
   if ( c < 0x20 || 0x7F < c)return 0;
   if (col_ >= OLED_COLMAX) return 0;
-  setCursor(col_, row_);
   for (i = 0; i < 5; i++)
     buf[i] = pgm_read_byte(&font[(c - 0x20) * 5 + i]);
   buf[i] = 0x00;
-  setimg(buf);
-  Wire.endTransmission();
+  setImg(buf);
   col_++;
   return 1;
 }

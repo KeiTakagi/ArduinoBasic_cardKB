@@ -45,7 +45,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2020.03.06
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -147,7 +147,8 @@ const TokenTableEntry PROGMEM tokenTable[] = {
   {"SAVE", TKN_FMT_POST}, {"LOAD", TKN_FMT_POST},
   {"PINREAD", 1}, {"ANALOGRD", 1},
   {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST},
-  {"SIN", 1}, {"COS", 1}, {"TAN", 1}, {"EXP", 1}, {"SQRT", 1}, {"LOG", 1}
+  {"SIN", 1}, {"COS", 1}, {"TAN", 1}, {"EXP", 1}, {"SQRT", 1}, {"LOG", 1},
+  {"IMG", TKN_FMT_POST}
 };
 
 
@@ -1832,6 +1833,14 @@ int parse_DIM() {
   return 0;
 }
 
+int parse_IMG() {
+  getNextToken();
+  int val = parseExpression();
+  if (!IS_TYPE_STR(val))
+    return ERROR_EXPR_EXPECTED_STR;
+  host_Img(stackPopStr());
+  return 0;
+}
 
 static int targetStmtNumber;
 int parseStmts()
@@ -1862,6 +1871,7 @@ int parseStmts()
       case TOKEN_GOSUB: ret = parse_GOSUB(); break;
       case TOKEN_DIM: ret = parse_DIM(); break;
       case TOKEN_PAUSE: ret = parse_PAUSE(); break;
+      case TOKEN_IMG:ret = parse_IMG();break;
 
       case TOKEN_LOAD:
       case TOKEN_SAVE:
@@ -1885,7 +1895,6 @@ int parseStmts()
       case TOKEN_DIR:
         ret = parseSimpleCmd();
         break;
-
       default:
         ret = ERROR_UNEXPECTED_CMD;
     }

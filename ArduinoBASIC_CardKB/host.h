@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2020.03.06
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -37,7 +37,7 @@ void host_moveCursor(uint8_t x, uint8_t y);
 void host_outputString(char *str);
 void host_outputProgMemString(const char *str);
 void host_outputChar(char c);
-void host_outputChar(char c,bool pause);
+void host_outputChar(char c, bool pause);
 void host_outputFloat(float f);
 char *host_floatToStr(float f, char *buf);
 int  host_outputInt(long val);
@@ -49,8 +49,8 @@ bool host_ESCPressed();
 void host_outputFreeMem(unsigned int val);
 void host_saveProgram(bool autoexec);
 void host_loadProgram();
-void host_LED(uint8_t r,uint8_t g,uint8_t b);
-void host_Img(uint8_t x,uint8_t y,uint8_t *imgBuff);
+void host_LED(uint8_t r, uint8_t g, uint8_t b);
+void host_Img(uint8_t *imgBuff);
 
 #if EXTERNAL_EEPROM
 void writeExtEEPROM(uint16_t address, uint8_t data);

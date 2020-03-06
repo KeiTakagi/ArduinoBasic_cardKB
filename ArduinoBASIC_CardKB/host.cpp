@@ -4,7 +4,7 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2019.11.26
+    @date 2020.03.06
 
     Copyright (c) 2019 Kei Takagi
 */
@@ -120,7 +120,7 @@ void host_showBuffer() {
         char c = screenBuffer[y * OLED_COLMAX + x];
         if (c < 0x20) c = ' ';
         if (x == curX && y == curY && inputMode && flash) c = 0x7f; //Cursor blink
-        oled.print(c);
+        oled.write(c);
       }
       lineDirty[y] = 0;
     }
@@ -336,12 +336,30 @@ void host_loadProgram() {
     mem[i] = EEPROM.read(i + 3);
 }
 
-void host_LED(uint8_t r,uint8_t g,uint8_t b){
-  flashOn(r,g,b);
+void host_LED(uint8_t r, uint8_t g, uint8_t b) {
+  flashOn(r, g, b);
 }
-void host_Img(uint8_t x,uint8_t y,uint8_t *imgBuff){
-  oled.setCursor(x,y);
-  oled.setimg(imgBuff);
+
+void host_Img( uint8_t *imgBuff) {
+  uint8_t i, v;
+  uint8_t buf[6];
+  for (i = 0; i < 12; i++) {
+    v = *(imgBuff + i);
+    if ( '0' <= v && v <= '9' )
+      v = v - '0';
+    else if ( 'A' <= v && v <= 'F' )
+      v = v - 'A' + 10;
+    else if ( 'a' <= v && v <= 'f' )
+      v = v - 'a' + 10;
+    else
+      v = 0;
+    if ( i % 2 == 0)
+      buf[i / 2] = v << 4;
+    else
+      buf[i / 2] += v;
+  }
+  oled.setCursor(curX, curY);
+  oled.setImg(buf);
 }
 
 //-----------------------------------------------------------------------------
