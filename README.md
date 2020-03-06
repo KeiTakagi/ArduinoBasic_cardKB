@@ -24,7 +24,7 @@
 20 IMG "F0F0F0F0F0F0"
 ```
 ### Adafruit NeoPixelライブラリを廃止しました
-軽量のフルカラーLEDライブラリ(light_ws2812 V2.4)[https://github.com/cpldcpu/light_ws2812] へ変更しました。
+軽量のフルカラーLEDライブラリ[light_ws2812 V2.4](https://github.com/cpldcpu/light_ws2812) へ変更しました。
 
 ### PRINT関数の表示を改善しました
 PRINT関数で画面右下の描画をした際、1行スクロールしていたのをスクロールしないよう改善しました。
