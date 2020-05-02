@@ -4,9 +4,9 @@
     Reference source:https://github.com/robinhedwards/ArduinoBASIC
 
     @author Kei Takagi
-    @date 2020.03.06
+    @date 2020.05.02
 
-    Copyright (c) 2019 Kei Takagi
+    Copyright (c) 2019 -2020 Kei Takagi
 */
 
 #include <SSD1306ASCII_I2C.h>
@@ -353,10 +353,13 @@ void host_Img( uint8_t *imgBuff) {
       v = v - 'a' + 10;
     else
       v = 0;
+    //bit reverse
+    v = ((v & 0x0c) >> 2) | ((v & 0x03) << 2);
+    v = ((v & 0x0a) >> 1) | ((v & 0x05) << 1);
     if ( i % 2 == 0)
-      buf[i / 2] = v << 4;
+      buf[i / 2] += v ;
     else
-      buf[i / 2] += v;
+      buf[i / 2] = v << 4;
   }
   oled.setCursor(curX, curY);
   oled.setImg(buf);
